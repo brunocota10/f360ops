@@ -500,19 +500,88 @@ tbody td { padding:12px 14px; font-size:13px; color:var(--text); }
 .log-type { font-size:9px; font-weight:700; padding:2px 7px; border-radius:5px; font-family:var(--font-mono); text-transform:uppercase; white-space:nowrap; }
 
 /* Responsive */
-@media (max-width:900px) {
+@media (max-width:900px) and (min-width:601px) {
   :root { --nav-w:var(--nav-w-col); }
   .sidebar { width:var(--nav-w-col); }
   .sidebar .sb-lbl,.sidebar .sb-uinfo,.sidebar .sb-section-lbl,.sidebar .sb-brand { opacity:0; width:0; overflow:hidden; }
   .main { margin-left:var(--nav-w-col); }
   .grid-4 { grid-template-columns:1fr 1fr; }
 }
+
+/* ── MOBILE (≤ 600px) ── */
 @media (max-width:600px) {
-  .page-content { padding:14px; }
-  .topbar { padding:0 14px; }
+  /* Login */
+  #login-page { padding:0; align-items:flex-end; background-image:none; }
+  .login-box {
+    max-width:100%; border-radius:24px 24px 0 0; padding:28px 20px 36px;
+    border-bottom:none; min-height:auto;
+  }
+  .login-logo { margin-bottom:20px; }
+  .login-logo h1 { font-size:20px; }
+  .login-field input { font-size:16px; padding:14px; } /* 16px prevents iOS zoom */
+  .login-btn { padding:16px; font-size:16px; margin-top:10px; }
+  .profile-pills { gap:6px; }
+  .profile-pill { padding:12px 4px; }
+  .profile-pill-icon { font-size:22px; }
+  .profile-pill-name { font-size:11px; }
+
+  /* App */
+  .page-content { padding:12px; }
+  .topbar { padding:0 12px; }
+  .topbar-title { font-size:15px; }
   .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
-  .modal { width:calc(100% - 20px); padding:18px; }
+  .modal { width:calc(100% - 16px); padding:16px; border-radius:18px; }
   .drawer { width:100%; }
+  .stat-val { font-size:22px; }
+
+  /* Sidebar mobile — bottom nav style */
+  .sidebar {
+    width:100% !important;
+    height:60px; top:auto; bottom:0; left:0; right:0;
+    flex-direction:row; border-right:none; border-top:1px solid var(--border);
+    min-height:unset; z-index:200;
+  }
+  .sb-head { display:none; }
+  .sb-foot { display:none; }
+  .sb-nav {
+    display:flex; flex-direction:row; padding:0;
+    overflow-x:auto; overflow-y:visible; flex:1;
+    scrollbar-width:none;
+  }
+  .sb-nav::-webkit-scrollbar { display:none; }
+  .sb-item {
+    flex-direction:column; gap:3px; padding:8px 10px; min-width:56px;
+    border-radius:0; white-space:nowrap; flex:1; max-width:80px;
+  }
+  .sb-item .sb-lbl { opacity:1 !important; width:auto !important; font-size:9px; overflow:hidden; text-overflow:ellipsis; max-width:64px; }
+  .sb-icon { width:24px; height:24px; border-radius:6px; }
+  .sb-icon svg { width:15px; height:15px; }
+  .sb-badge { display:none; }
+  .main {
+    margin-left:0 !important;
+    margin-bottom:60px; /* space for bottom nav */
+  }
+  .topbar { position:sticky; top:0; z-index:150; }
+
+  /* Cards */
+  .card-pad { padding:14px; }
+  .sec-head { flex-wrap:wrap; gap:8px; }
+  .stat-card { padding:14px; }
+  
+  /* Tables scroll */
+  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  
+  /* Chat fullscreen */
+  #chat-fullscreen { border-radius:0; }
+}
+
+/* ── Notch / safe area support ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width:600px) {
+    .sidebar { padding-bottom:env(safe-area-inset-bottom); height:calc(60px + env(safe-area-inset-bottom)); }
+    .main { margin-bottom:calc(60px + env(safe-area-inset-bottom)); }
+    #login-page .login-box { padding-bottom:calc(36px + env(safe-area-inset-bottom)); }
+  }
 }
 
 /* ── Chat enhanced ── */
@@ -723,6 +792,15 @@ console.log('[F360] Firebase ✅ f360ops');
     <div class="login-divider">acesso rápido</div>
     <div class="profile-pills" id="profile-pills"></div>
     <button class="login-btn" style="margin-top:18px" id="login-btn-main" onclick="doLogin()">Entrar no sistema</button>
+    <!-- Download / Install app -->
+    <div id="login-install-bar" style="display:none;margin-top:14px">
+      <button onclick="triggerPwaInstall()" style="width:100%;padding:11px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border2)'">
+        <span style="font-size:18px">⬇️</span> Instalar app no celular
+      </button>
+    </div>
+    <div id="login-ios-hint" style="display:none;margin-top:10px;background:var(--bg3);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text3);text-align:center">
+      📱 iPhone: Safari → <strong style="color:var(--text)">Compartilhar ↑</strong> → <strong style="color:var(--text)">Adicionar à Tela de Início</strong>
+    </div>
   </div>
 </div>
 
@@ -3134,13 +3212,24 @@ function seedData() {
     {id:'t5', nome:'Administração', icon:'👑', desc:'Gestão administrativa e liderança geral', gestorId:'u1', cor:'#F5A623'},
   ];
 
-  // Apenas o admin é criado automaticamente — outros usuários são cadastrados pelo admin
+  // Admin sempre com senha correta + usuários demo para o sistema funcionar
   const adminExists = _allUsers.find(u => u.email === 'bruna.vieira@fecaf.com.br');
-  const users = adminExists
-    ? _allUsers.map(u => u.email === 'bruna.vieira@fecaf.com.br'
-        ? {...u, senha:'123456789Bc*', perfil:'admin', status:'ativo', ativo:true}
-        : u)
-    : [{id:'u1', nome:'Bruna Vieira', email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', cargo:'Administradora', equipeId:'t5', ativo:true, status:'ativo', criadoEm:new Date().toISOString()}];
+  const demoUsers = [
+    {id:'u1', nome:'Bruna Vieira',      email:'bruna.vieira@fecaf.com.br',         senha:'123456789Bc*', perfil:'admin',       cargo:'Administradora',        equipeId:'t5', ativo:true, status:'ativo'},
+    {id:'u2', nome:'Gabriel Marques',   email:'gabriel.marques@colegioser.com',     senha:'Capivara2026#', perfil:'gestor',      cargo:'Gestor de Manutenção',  equipeId:'t1', ativo:true, status:'ativo'},
+    {id:'u3', nome:'Claudiano Meireles',email:'claudiano.meireles@colegioser.com',  senha:'Cavalo2026#',   perfil:'funcionario', cargo:'Eletricista',           equipeId:'t1', ativo:true, status:'ativo'},
+    {id:'u4', nome:'Rafaela Santos',    email:'rafaela.santos@colegioser.com',      senha:'Pato2026#',     perfil:'gestor',      cargo:'Gestora de Segurança',  equipeId:'t2', ativo:true, status:'ativo'},
+    {id:'u5', nome:'João Ferreira',     email:'joao.ferreira@colegioser.com',       senha:'Leao2026#',     perfil:'gestor',      cargo:'Gestor de Limpeza',     equipeId:'t3', ativo:true, status:'ativo'},
+    {id:'u6', nome:'Ana Paula Lima',    email:'ana.lima@colegioser.com',            senha:'Gato2026#',     perfil:'gestor',      cargo:'Gestora de TI',         equipeId:'t4', ativo:true, status:'ativo'},
+    {id:'u7', nome:'Carlos Eduardo',    email:'carlos.eduardo@colegioser.com',      senha:'Urso2026#',     perfil:'funcionario', cargo:'Vigilante',             equipeId:'t2', ativo:true, status:'ativo'},
+    {id:'u8', nome:'Márcia Oliveira',   email:'marcia.oliveira@colegioser.com',     senha:'Cobra2026#',    perfil:'funcionario', cargo:'Auxiliar de Limpeza',   equipeId:'t3', ativo:true, status:'ativo'},
+    {id:'u9', nome:'Tiago Souza',       email:'tiago.souza@colegioser.com',         senha:'Tigre2026#',    perfil:'funcionario', cargo:'Técnico em TI',         equipeId:'t4', ativo:true, status:'ativo'},
+  ];
+  // Merge: preserva dados/senhas já modificados, adiciona quem não existe
+  const users = demoUsers.map(demo => {
+    const existing = _allUsers.find(u => u.id===demo.id || u.email===demo.email);
+    return existing ? {...demo, ...existing, senha: existing.senha||demo.senha} : demo;
+  });
 
   const spaces = [
     {id:'s1', nome:'Bloco A', icon:'🏢', endereco:'Rua das Flores, 100 — Bloco A', lat:'-23.5505', lng:'-46.6333', raio:80, ativo:true},
@@ -3192,36 +3281,69 @@ let sidebarCollapsed = false;
 // ─── LOGIN ───
 // Seed credentials are always hardcoded so Firebase can't break the login pills
 const SEED_CREDENTIALS = [
-  {email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', nome:'Bruna Vieira'},
+  {email:'bruna.vieira@fecaf.com.br',            senha:'123456789Bc*',  perfil:'admin',       nome:'Bruna Vieira'},
+  {email:'gabriel.marques@colegioser.com',        senha:'Capivara2026#', perfil:'gestor',      nome:'Gabriel Marques'},
+  {email:'claudiano.meireles@colegioser.com',     senha:'Cavalo2026#',   perfil:'funcionario', nome:'Claudiano Meireles'},
 ];
 
 function buildProfilePills() {
   const icons  = {admin:'👑', gestor:'👤', funcionario:'🔧'};
   const labels = {admin:'Admin', gestor:'Gestor', funcionario:'Operador'};
-  // Carregar acessos rápidos salvos (usuários que já fizeram login antes)
-  const savedLogins = ld('f360_saved_logins', []);
-  // Admin sempre aparece fixo
+  // Admin sempre fixo
   const adminEntry = {email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', nome:'Bruna Vieira'};
-  // Combina admin fixo + logins salvos de outros perfis (sem duplicar admin)
+  // Logins salvos localmente
+  const savedLogins = ld('f360_saved_logins', []);
   const allPills = [adminEntry, ...savedLogins.filter(u => u.email !== adminEntry.email)].slice(0, 4);
   const el = document.getElementById('profile-pills');
   if(!el) return;
-  el.innerHTML = allPills.map(u=>`
+  // Garante 3 pills: usa SEED_CREDENTIALS se não tiver dados salvos suficientes
+  let finalPills = allPills;
+  if(finalPills.length < 3) {
+    SEED_CREDENTIALS.forEach(sc => {
+      if(!finalPills.find(p => p.email === sc.email)) finalPills.push(sc);
+    });
+  }
+  el.innerHTML = finalPills.slice(0,4).map(u=>`
     <div class="profile-pill" onclick="fillLogin('${u.email}','',this)" data-email="${u.email}">
       <div class="profile-pill-icon">${icons[u.perfil]||'👤'}</div>
       <div class="profile-pill-name">${labels[u.perfil]||u.nome?.split(' ')[0]||'Usuário'}</div>
     </div>`).join('');
+  // No mobile, também carrega logins do Firebase (pode ter mais usuários)
+  if(window.F360Firebase) {
+    window.F360Firebase.getAll('saved_logins').then(fbLogins => {
+      if(!fbLogins?.length) return;
+      const merged = [...savedLogins];
+      fbLogins.forEach(fb => {
+        if(fb.email !== adminEntry.email && !merged.find(s => s.email===fb.email)) {
+          merged.push({email:fb.email, perfil:fb.perfil, nome:fb.nome});
+        }
+      });
+      if(merged.length > savedLogins.length) {
+        sv('f360_saved_logins', merged);
+        const allPills2 = [adminEntry, ...merged].slice(0, 4);
+        if(el) el.innerHTML = allPills2.map(u=>`
+          <div class="profile-pill" onclick="fillLogin('${u.email}','',this)" data-email="${u.email}">
+            <div class="profile-pill-icon">${icons[u.perfil]||'👤'}</div>
+            <div class="profile-pill-name">${labels[u.perfil]||u.nome?.split(' ')[0]||'Usuário'}</div>
+          </div>`).join('');
+      }
+    }).catch(()=>{});
+  }
 }
 
 function saveLoginToQuickAccess(user) {
-  // Salva o usuário nos acessos rápidos após 1º login bem-sucedido
   if(!user || user.perfil === 'admin') return; // admin já é fixo
   const saved = ld('f360_saved_logins', []);
   const exists = saved.find(s => s.email === user.email);
   if(!exists) {
-    saved.push({email:user.email, perfil:user.perfil, nome:user.nome});
+    const entry = {email:user.email, perfil:user.perfil, nome:user.nome};
+    saved.push(entry);
     sv('f360_saved_logins', saved);
-    buildProfilePills(); // atualiza pills
+    // Também salva no Firebase para persistir no mobile PWA
+    if(window.F360Firebase) {
+      window.F360Firebase.set('saved_logins', user.email.replace(/[@.]/g,'_'), entry).catch(()=>{});
+    }
+    buildProfilePills();
   }
 }
 
@@ -6093,30 +6215,37 @@ function checkCfgSenha() {
 }
 
 function salvarNovaSenha() {
-  const atual  = document.getElementById('cfg-senha-atual')?.value;
-  const nova   = document.getElementById('cfg-senha-nova')?.value;
-  const conf   = document.getElementById('cfg-senha-conf')?.value;
+  const atual = document.getElementById('cfg-senha-atual')?.value;
+  const nova  = document.getElementById('cfg-senha-nova')?.value;
+  const conf  = document.getElementById('cfg-senha-conf')?.value;
   if(!atual || !nova || !conf) { toast('Preencha todos os campos','red'); return; }
   if(atual !== ME?.senha) { toast('Senha atual incorreta','red'); return; }
   if(nova !== conf) { toast('As senhas não coincidem','red'); return; }
-  if(nova.length < 8) { toast('Senha deve ter mínimo 8 caracteres','red'); return; }
-  // Atualizar nos dados locais
+  if(nova.length < 8) { toast('Mínimo 8 caracteres','red'); return; }
+  // Atualizar localmente
   const users = ld('f360_users',[]);
   const idx = users.findIndex(u => u.id === ME.id || u.email === ME.email);
-  if(idx >= 0) {
-    users[idx].senha = nova;
-    sv('f360_users', users);
-    ME.senha = nova;
-    window.ME.senha = nova;
-    // Sync Firebase
-    if(window.F360Firebase) window.F360Firebase.set('users', ME.id, {senha: nova});
-    toast('✅ Senha alterada com sucesso!','green');
-    // Limpar campos
-    ['cfg-senha-atual','cfg-senha-nova','cfg-senha-conf'].forEach(id => {
-      const el = document.getElementById(id); if(el) el.value='';
-    });
-    document.getElementById('cfg-senha-strength').textContent='';
+  if(idx < 0) { toast('Usuário não encontrado','red'); return; }
+  users[idx].senha = nova;
+  sv('f360_users', users);
+  ME.senha = nova;
+  window.ME.senha = nova;
+  // Sync Firebase — salvar objeto completo para o merge não apagar a senha
+  if(window.F360Firebase) {
+    // Salva senha em coleção separada (não sobrescrita pelo merge de users)
+    const safeId = (ME.id || ME.email.replace(/[@.]/g,'_'));
+    window.F360Firebase.set('user_passwords', safeId, {
+      userId: ME.id, email: ME.email, senha: nova, updatedAt: new Date().toISOString()
+    }).catch(()=>{});
+    // Também atualiza no users com merge:true para não apagar outros campos
+    window.F360Firebase.set('users', ME.id, {senha: nova, _senhaAt: new Date().toISOString()}).catch(()=>{});
   }
+  toast('✅ Senha alterada com sucesso!','green');
+  ['cfg-senha-atual','cfg-senha-nova','cfg-senha-conf'].forEach(fid => {
+    const el = document.getElementById(fid); if(el) el.value='';
+  });
+  const strEl = document.getElementById('cfg-senha-strength');
+  if(strEl) strEl.textContent='';
 }
 
 function renderDownloadApp() {
@@ -6185,9 +6314,26 @@ let _pwaPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _pwaPrompt = e;
+  // Show install button on login page
+  const bar = document.getElementById('login-install-bar');
+  if(bar) bar.style.display = 'block';
+  // Show in config too
   const wrap = document.getElementById('pwa-install-btn-wrap');
   if(wrap) wrap.style.display = 'block';
 });
+
+// Show iOS hint on iPhone/iPad
+(function() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isInStandalone = window.navigator.standalone;
+  if(isIOS && !isInStandalone) {
+    // Delay slightly so DOM is ready
+    setTimeout(() => {
+      const hint = document.getElementById('login-ios-hint');
+      if(hint) hint.style.display = 'block';
+    }, 500);
+  }
+})();
 
 function triggerPwaInstall() {
   if(_pwaPrompt) {
@@ -7617,13 +7763,15 @@ function getRadioChannels() {
 
 function canAccessChannel(ch) {
   if(!ME) return false;
+  // Admin acessa todos
   if(ME.perfil === 'admin') return true;
+  // Canal geral: todos têm acesso
   if(ch.tipo === 'geral') return true;
+  // Canais de departamento: apenas membros do dept
   if(ch.tipo === 'departamento') {
-    if(ME.perfil === 'gestor') return ch.equipeId === ME.equipeId;
-    if(ME.perfil === 'funcionario') return ch.equipeId === ME.equipeId;
+    return ch.equipeId === ME.equipeId;
   }
-  return false;
+  return true; // default: acesso liberado
 }
 
 function renderRadioCanais() {
@@ -7740,17 +7888,26 @@ function showRadioVizActive(label) {
 
 function renderRadioTransmissionLog(channelId) {
   const el = document.getElementById('radio-transmissions-log'); if(!el) return;
-  const stored = JSON.parse(localStorage.getItem('f360_radio_'+channelId)||'[]').slice(-10).reverse();
-  if(!stored.length) { el.innerHTML='<div style="font-size:12px;color:var(--text4);text-align:center;padding:8px">Nenhuma transmissão ainda</div>'; return; }
-  el.innerHTML = stored.map(t=>{
-    const [c1,c2]=avc(t.fromNome||'?');
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${ini(t.fromNome||'?')}</div>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:600;color:var(--text)">${t.fromNome||'—'}</div>
-        ${t.audio?`<audio controls src="${t.audio}" style="height:24px;width:100%;margin-top:3px"></audio>`:'<div style="font-size:10px;color:var(--text3)">Transmissão de voz</div>'}
+  const all = JSON.parse(localStorage.getItem('f360_radio_'+channelId)||'[]');
+  // Filtrar transmissões válidas (com duração e remetente)
+  const valid = all.filter(t => t.dur && t.dur !== '0:00' && t.dur !== '00:00' && t.fromId && t.fromNome);
+  const stored = valid.slice(-10).reverse();
+  if(!stored.length) {
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--text4);font-size:12px">📻 Nenhuma transmissão neste canal</div>';
+    return;
+  }
+  el.innerHTML = stored.map(t => {
+    const [c1,c2] = avc(t.fromNome||'?');
+    const isMe = t.fromId === ME?.id;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${ini(t.fromNome)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${t.fromNome}${isMe?' <span style="font-size:10px;color:var(--text3)">(você)</span>':''}</div>
+        ${t.audio
+          ? `<audio controls src="${t.audio}" style="height:28px;width:100%;max-width:200px;margin-top:3px"></audio>`
+          : `<div style="font-size:10px;color:var(--text3);margin-top:2px">🎙️ ${t.dur}</div>`}
       </div>
-      <div style="font-size:10px;font-family:var(--font-mono);color:var(--text4);flex-shrink:0">${t.dur||''}<br>${t.tsStr||''}</div>
+      <div style="font-size:9px;font-family:var(--font-mono);color:var(--text4);flex-shrink:0;text-align:right">${t.dur}<br>${t.tsStr||''}</div>
     </div>`;
   }).join('');
 }
@@ -7815,6 +7972,8 @@ async function sendRadioTransmission() {
   const blob = new Blob(_radioPttChunks, {type:'audio/webm'});
   
   // Convert to base64
+  // Só salvar se gravou pelo menos 1 segundo
+  if(_radioPttSecs < 1) { toast('Pressione e segure para transmitir','amber'); return; }
   const reader = new FileReader();
   reader.onload = async e => {
     const audioData = e.target.result;
@@ -8816,21 +8975,28 @@ function renderPresence() {
 // ─── BOOT ───
 // Full reset of stale data — runs once per browser session
 (function resetStaleData(){
-  // Se já inicializou nesta sessão, apenas garantir admin está correto
+  // Garantir admin com senha correta
   const users = JSON.parse(localStorage.getItem('f360_users')||'[]');
   const adminIdx = users.findIndex(u => u.email==='bruna.vieira@fecaf.com.br');
   if(adminIdx >= 0) {
-    // Sempre garantir senha correta do admin
     users[adminIdx].senha = '123456789Bc*';
     users[adminIdx].perfil = 'admin';
     users[adminIdx].ativo = true;
     localStorage.setItem('f360_users', JSON.stringify(users));
   } else {
-    // Admin não existe — limpar seed flag para re-criar
     localStorage.removeItem('f360_seeded');
     console.log('[F360] Admin not found — will re-seed');
   }
-  // Não apagar chamados/checklists — dados reais dos usuários
+  // Limpar transmissões de rádio demo (0:00/0:00) que estavam bugadas
+  const radioKeys = Object.keys(localStorage).filter(k => k.startsWith('f360_radio_'));
+  radioKeys.forEach(k => {
+    try {
+      const items = JSON.parse(localStorage.getItem(k)||'[]');
+      // Remove itens sem duração ou com dur 0:00
+      const valid = items.filter(t => t.dur && t.dur !== '0:00' && t.dur !== '00:00' && t.fromId);
+      if(valid.length !== items.length) localStorage.setItem(k, JSON.stringify(valid));
+    } catch(e) {}
+  });
   console.log('[F360] Session check complete');
 })();
 seedData();
@@ -10063,9 +10229,17 @@ function saveOperador() {
   // Sync to Firebase — atualiza em tempo real para todos os usuários conectados
   if(window.F360Firebase) {
     const fbData = {...userData};
-    // Não salvar senha no Firestore (segurança)
-    delete fbData.senha;
-    window.F360Firebase.set('users', userData.id, fbData);
+    const senhaToSave = fbData.senha;
+    delete fbData.senha; // não expor senha no users collection
+    window.F360Firebase.set('users', userData.id, fbData).catch(()=>{});
+    // Salvar senha em coleção separada para persistir no mobile
+    if(senhaToSave) {
+      const safeId = userData.id || userData.email.replace(/[@.]/g,'_');
+      window.F360Firebase.set('user_passwords', safeId, {
+        userId: userData.id, email: userData.email,
+        senha: senhaToSave, updatedAt: new Date().toISOString()
+      }).catch(()=>{});
+    }
   }
   addLog('operador', (editId?'Editou':'Criou')+' operador "'+nome+'"');
   const saved = ld('f360_users',[]).find(u=>u.id===userData.id);
@@ -11056,19 +11230,35 @@ async function bootstrap() {
     const data = await F.getAll(coll);
     if(data.length) { localStorage.setItem(key, JSON.stringify(data)); }
   }
-  // Users: merge Firestore with local seed (preserve passwords and perfil)
+  // Users: merge Firestore with local (preserve passwords and perfil)
   const fbUsers = await F.getAll('users');
+  // Load saved passwords from separate collection
+  const fbPasswords = await F.getAll('user_passwords').catch(()=>[]);
+  const passwordMap = {};
+  fbPasswords.forEach(p => { if(p.email && p.senha) passwordMap[p.email.toLowerCase()] = p.senha; });
+
   if(fbUsers.length) {
     const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
     const merged = fbUsers.map(fbU => {
       const local = localUsers.find(l => l.id===fbU.id || l.email?.toLowerCase()===fbU.email?.toLowerCase());
-      if(local) return { ...fbU, senha:local.senha||fbU.senha, perfil:local.perfil||fbU.perfil||'funcionario', equipeId:local.equipeId||fbU.equipeId||'', cargo:local.cargo||fbU.cargo||'' };
-      return fbU;
+      // Priority: local senha > user_passwords > firebase users senha
+      const senhaFinal = local?.senha || passwordMap[fbU.email?.toLowerCase()] || fbU.senha;
+      if(local) return { ...fbU, senha:senhaFinal, perfil:local.perfil||fbU.perfil||'funcionario', equipeId:local.equipeId||fbU.equipeId||'', cargo:local.cargo||fbU.cargo||'' };
+      return { ...fbU, senha: senhaFinal };
     });
     localUsers.forEach(lu => {
       if(!merged.find(m => m.id===lu.id || m.email?.toLowerCase()===lu.email?.toLowerCase())) merged.push(lu);
     });
     localStorage.setItem('f360_users', JSON.stringify(merged));
+  }
+  // Load quick access logins
+  const fbSavedLogins = await F.getAll('saved_logins').catch(()=>[]);
+  if(fbSavedLogins.length) {
+    const localSaved = JSON.parse(localStorage.getItem('f360_saved_logins')||'[]');
+    fbSavedLogins.forEach(fb => {
+      if(!localSaved.find(s => s.email === fb.email)) localSaved.push(fb);
+    });
+    localStorage.setItem('f360_saved_logins', JSON.stringify(localSaved));
   }
   console.log('[F360] Data loaded ✅');
 }
@@ -11577,9 +11767,10 @@ onAuthStateChanged(fbAuth, async fbUser => {
       window.ME.senha    = afterMatch.senha    || window.ME.senha;
     }
     window.initApp();
-    // Re-render sidebar garantido após dados async
+    // Re-render sidebar e pills garantidos após dados async
     setTimeout(() => {
       if(window.ME) { window.buildSidebar?.(); window.updateUserUI?.(); }
+      window.buildProfilePills?.();
     }, 500);
     console.log('[F360] Session restored:', window.ME.nome, '| perfil:', window.ME.perfil);
     // Flag permanece true — app está inicializado
