@@ -1420,6 +1420,121 @@ console.log('[F360] Firebase ✅ f360ops');
         </div><!-- end ck-panel-radio -->
       </div>
 
+      <!-- COMUNICAÇÃO -->
+      <div class="page" id="p-comunicacao">
+        <!-- Tabs: Contatos / Canais -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div class="tabs" style="width:auto">
+            <div class="tab on" id="com-tab-contatos" onclick="setComTab('contatos')">💬 Mensagens</div>
+            <div class="tab"    id="com-tab-canais"   onclick="setComTab('canais')">📡 Canais & Rádio</div>
+          </div>
+          <div id="com-tab-title" style="font-size:13px;color:var(--text3)"></div>
+        </div>
+
+        <!-- MENSAGENS PANEL -->
+        <div id="com-panel-contatos">
+          <div style="display:flex;gap:14px;height:calc(100vh - 160px);min-height:400px">
+            <!-- Lista de contatos -->
+            <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-radius:14px;border:1px solid var(--border);overflow:hidden">
+              <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+                <div class="search-bar">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  <input id="com-search" placeholder="Buscar..." oninput="renderContatosList()">
+                </div>
+              </div>
+              <div id="contatos-full" style="flex:1;overflow-y:auto"></div>
+            </div>
+            <!-- Chat area -->
+            <div style="flex:1;background:var(--bg2);border-radius:14px;border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden">
+              <div id="com-chat-placeholder" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3)">
+                <div style="font-size:56px;margin-bottom:12px">💬</div>
+                <div style="font-size:15px;font-weight:600;color:var(--text)">Selecione uma conversa</div>
+                <div style="font-size:12px;margin-top:6px">Escolha um contato para iniciar</div>
+              </div>
+              <div id="com-chat-active" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+                <!-- Header -->
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0">
+                  <div id="com-chat-av" class="av av-md"></div>
+                  <div style="flex:1">
+                    <div id="com-chat-nome" style="font-size:14px;font-weight:700;color:var(--text)">—</div>
+                    <div id="com-chat-status" style="font-size:11px;color:var(--green)">● online</div>
+                  </div>
+                  <button class="btn ghost sm" onclick="startCallFull()">
+                    <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    Ligar
+                  </button>
+                </div>
+                <!-- Messages -->
+                <div id="com-msgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px"></div>
+                <!-- Input -->
+                <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0">
+                  <div style="display:flex;gap:8px;align-items:flex-end">
+                    <textarea id="com-inp" placeholder="Mensagem..." rows="1"
+                      style="flex:1;padding:10px 14px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;font-size:14px;font-family:var(--font-body);color:var(--text);resize:none;outline:none;max-height:100px;line-height:1.5;transition:border-color .2s"
+                      onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor=''"
+                      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();comSendMsg()}"
+                      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+                    <button onclick="comSendMsg()" style="width:42px;height:42px;border-radius:12px;border:none;background:var(--blue);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(59,126,246,.4)">
+                      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CANAIS & RÁDIO PANEL -->
+        <div id="com-panel-canais" style="display:none">
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <!-- Lista de canais -->
+            <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">📡 Canais disponíveis</div>
+              <div id="radio-canais-list"></div>
+            </div>
+            <!-- Painel do canal ativo -->
+            <div style="flex:1;min-width:280px">
+              <!-- Info do canal -->
+              <div id="radio-canal-info" class="card card-pad" style="margin-bottom:14px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                  <div id="rci-icon" style="width:48px;height:48px;border-radius:14px;background:var(--bluel);display:flex;align-items:center;justify-content:center;font-size:24px">📡</div>
+                  <div style="flex:1">
+                    <div id="rci-nome" style="font-size:16px;font-weight:700;color:var(--text)">Canal Geral</div>
+                    <div id="rci-desc" style="font-size:12px;color:var(--text3)">Todos os membros</div>
+                  </div>
+                  <div id="rci-on-air" style="display:none;background:var(--redl);border:1px solid rgba(240,79,79,.4);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--red);display:flex;align-items:center;gap:6px">
+                    <div style="width:7px;height:7px;border-radius:50%;background:var(--red);animation:gpspulse 1s ease infinite"></div>
+                    <span id="rci-on-air-nome">No ar</span>
+                  </div>
+                </div>
+                <!-- Membros no canal -->
+                <div id="rci-members" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
+                <!-- Visualizador de áudio -->
+                <div id="radio-audio-viz" style="height:48px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:16px;overflow:hidden;position:relative">
+                  <div id="radio-viz-idle" style="font-size:12px;color:var(--text4)">🔇 Canal silencioso</div>
+                  <div id="radio-viz-bars" style="display:none;align-items:flex-end;gap:3px;height:100%;padding:8px 12px;width:100%"></div>
+                  <div id="radio-viz-label" style="position:absolute;bottom:4px;right:10px;font-size:9px;color:var(--text4);font-family:var(--font-mono)"></div>
+                </div>
+                <!-- Botão PTT -->
+                <button id="ptt-main-btn"
+                  onmousedown="pttMainDown(event)" onmouseup="pttMainUp(event)"
+                  onmouseleave="pttMainUp(event)" ontouchstart="pttMainDown(event)" ontouchend="pttMainUp(event)"
+                  style="width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(135deg,#1a4fd8,#3B7EF6);color:#fff;font-family:var(--font-head);font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;touch-action:none;-webkit-user-select:none;user-select:none;transition:all .15s;box-shadow:0 6px 20px rgba(59,126,246,.4)">
+                  <svg style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+                  <span id="ptt-main-lbl">Pressionar para falar</span>
+                </button>
+                <div id="ptt-main-timer" style="text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--text3);margin-top:8px">00:00</div>
+              </div>
+              <!-- Log de transmissões -->
+              <div class="card card-pad">
+                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">📼 Transmissões recentes</div>
+                <div id="radio-transmissions-log" style="display:flex;flex-direction:column;gap:8px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- RÁDIO PTT -->
       <div class="page" id="p-radio">
         <div class="sec-head"><div><div class="sec-title">Rádio PTT</div><div class="sec-sub">Push-to-talk por canal e equipe</div></div></div>
@@ -2997,8 +3112,17 @@ const fmtDate = d=>new Date(d).toLocaleDateString('pt-BR');
 
 // ─── INITIAL DATA SEED ───
 function seedData() {
-  if (ld('f360_seeded', false) && ld('f360_users',[]).length > 0) {
-    // Always re-run seedChamadosExtra on every boot to keep data fresh
+  // Sempre garante que o admin existe com a senha correta
+  const existingUsers = ld('f360_users', []);
+  const adminIdx = existingUsers.findIndex(u => u.email === 'bruna.vieira@fecaf.com.br');
+  if(adminIdx >= 0) {
+    existingUsers[adminIdx].senha  = '123456789Bc*';
+    existingUsers[adminIdx].perfil = 'admin';
+    existingUsers[adminIdx].ativo  = true;
+    existingUsers[adminIdx].status = 'ativo';
+    sv('f360_users', existingUsers);
+  }
+  if (ld('f360_seeded', false) && existingUsers.length > 0) {
     return;
   }
 
@@ -3010,17 +3134,14 @@ function seedData() {
     {id:'t5', nome:'Administração', icon:'👑', desc:'Gestão administrativa e liderança geral', gestorId:'u1', cor:'#F5A623'},
   ];
 
-  const users = [
-    {id:'u1', nome:'Bruna Vieira', email:'bruna.vieira@fecaf.com.br', senha:'Cachorro2026#', perfil:'admin', cargo:'Administradora', telefone:'(11) 98888-1111', cpf:'111.111.111-11', equipeId:'t5', ativo:true},
-    {id:'u2', nome:'Gabriel Marques', email:'gabriel.marques@colegioser.com', senha:'Capivara2026#', perfil:'gestor', cargo:'Gestor de Manutenção', telefone:'(11) 98888-2222', cpf:'222.222.222-22', equipeId:'t1', ativo:true},
-    {id:'u3', nome:'Claudiano Meireles', email:'claudiano.meireles@colegioser.com', senha:'Cavalo2026#', perfil:'funcionario', cargo:'Eletricista', telefone:'(11) 98888-3333', cpf:'333.333.333-33', equipeId:'t1', ativo:true},
-    {id:'u4', nome:'Rafaela Santos', email:'rafaela.santos@colegioser.com', senha:'Pato2026#', perfil:'gestor', cargo:'Gestora de Segurança', telefone:'(11) 98888-4444', cpf:'444.444.444-44', equipeId:'t2', ativo:true},
-    {id:'u5', nome:'João Ferreira', email:'joao.ferreira@colegioser.com', senha:'Leao2026#', perfil:'gestor', cargo:'Gestor de Limpeza', telefone:'(11) 98888-5555', cpf:'555.555.555-55', equipeId:'t3', ativo:true},
-    {id:'u6', nome:'Ana Paula Lima', email:'ana.lima@colegioser.com', senha:'Gato2026#', perfil:'gestor', cargo:'Gestora de TI', telefone:'(11) 98888-6666', cpf:'666.666.666-66', equipeId:'t4', ativo:true},
-    {id:'u7', nome:'Carlos Eduardo', email:'carlos.eduardo@colegioser.com', senha:'Urso2026#', perfil:'funcionario', cargo:'Vigilante', telefone:'(11) 98888-7777', cpf:'777.777.777-77', equipeId:'t2', ativo:true},
-    {id:'u8', nome:'Márcia Oliveira', email:'marcia.oliveira@colegioser.com', senha:'Cobra2026#', perfil:'funcionario', cargo:'Auxiliar de Limpeza', telefone:'(11) 98888-8888', cpf:'888.888.888-88', equipeId:'t3', ativo:true},
-    {id:'u9', nome:'Tiago Souza', email:'tiago.souza@colegioser.com', senha:'Tigre2026#', perfil:'funcionario', cargo:'Técnico em TI', telefone:'(11) 98888-9999', cpf:'999.999.999-99', equipeId:'t4', ativo:true},
-  ];
+  // Apenas o admin é criado automaticamente — outros usuários são cadastrados pelo admin
+  const existingUsers = ld('f360_users', []);
+  const adminExists = existingUsers.find(u => u.email === 'bruna.vieira@fecaf.com.br');
+  const users = adminExists
+    ? existingUsers.map(u => u.email === 'bruna.vieira@fecaf.com.br'
+        ? {...u, senha:'123456789Bc*', perfil:'admin', status:'ativo', ativo:true}
+        : u)
+    : [{id:'u1', nome:'Bruna Vieira', email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', cargo:'Administradora', equipeId:'t5', ativo:true, status:'ativo', criadoEm:new Date().toISOString()}];
 
   const spaces = [
     {id:'s1', nome:'Bloco A', icon:'🏢', endereco:'Rua das Flores, 100 — Bloco A', lat:'-23.5505', lng:'-46.6333', raio:80, ativo:true},
@@ -3072,25 +3193,44 @@ let sidebarCollapsed = false;
 // ─── LOGIN ───
 // Seed credentials are always hardcoded so Firebase can't break the login pills
 const SEED_CREDENTIALS = [
-  {email:'bruna.vieira@fecaf.com.br',    senha:'Cachorro2026#', perfil:'admin',       nome:'Bruna Vieira'},
-  {email:'gabriel.marques@colegioser.com',senha:'Capivara2026#', perfil:'gestor',      nome:'Gabriel Marques'},
-  {email:'claudiano.meireles@colegioser.com',senha:'Cavalo2026#',perfil:'funcionario', nome:'Claudiano Meireles'},
+  {email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', nome:'Bruna Vieira'},
 ];
 
 function buildProfilePills() {
   const icons  = {admin:'👑', gestor:'👤', funcionario:'🔧'};
   const labels = {admin:'Admin', gestor:'Gestor', funcionario:'Operador'};
-  // Always use hardcoded seeds for pills — Firebase can't break these
-  document.getElementById('profile-pills').innerHTML = SEED_CREDENTIALS.map(u=>`
-    <div class="profile-pill" onclick="fillLogin('${u.email}','${u.senha}',this)">
-      <div class="profile-pill-icon">${icons[u.perfil]}</div>
-      <div class="profile-pill-name">${labels[u.perfil]}</div>
+  // Carregar acessos rápidos salvos (usuários que já fizeram login antes)
+  const savedLogins = ld('f360_saved_logins', []);
+  // Admin sempre aparece fixo
+  const adminEntry = {email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', nome:'Bruna Vieira'};
+  // Combina admin fixo + logins salvos de outros perfis (sem duplicar admin)
+  const allPills = [adminEntry, ...savedLogins.filter(u => u.email !== adminEntry.email)].slice(0, 4);
+  const el = document.getElementById('profile-pills');
+  if(!el) return;
+  el.innerHTML = allPills.map(u=>`
+    <div class="profile-pill" onclick="fillLogin('${u.email}','',this)" data-email="${u.email}">
+      <div class="profile-pill-icon">${icons[u.perfil]||'👤'}</div>
+      <div class="profile-pill-name">${labels[u.perfil]||u.nome?.split(' ')[0]||'Usuário'}</div>
     </div>`).join('');
+}
+
+function saveLoginToQuickAccess(user) {
+  // Salva o usuário nos acessos rápidos após 1º login bem-sucedido
+  if(!user || user.perfil === 'admin') return; // admin já é fixo
+  const saved = ld('f360_saved_logins', []);
+  const exists = saved.find(s => s.email === user.email);
+  if(!exists) {
+    saved.push({email:user.email, perfil:user.perfil, nome:user.nome});
+    sv('f360_saved_logins', saved);
+    buildProfilePills(); // atualiza pills
+  }
 }
 
 function fillLogin(email, pass, el) {
   document.getElementById('l-email').value = email;
-  document.getElementById('l-pass').value = pass;
+  // Não preenche senha automaticamente por segurança
+  document.getElementById('l-pass').value = '';
+  document.getElementById('l-pass').focus();
   document.querySelectorAll('.profile-pill').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('lerr').classList.remove('show');
@@ -3103,12 +3243,25 @@ function togglePw() {
 
 function doLogin() {
   const email = document.getElementById('l-email').value.trim();
-  const pass = document.getElementById('l-pass').value;
+  const pass  = document.getElementById('l-pass').value;
+  if(!email || !pass) {
+    document.getElementById('lerr').textContent = 'Preencha e-mail e senha.';
+    document.getElementById('lerr').classList.add('show'); return;
+  }
+  seedData(); // garante que dados estão carregados
   const users = ld('f360_users', []);
   const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
-  if (!found) { document.getElementById('lerr').classList.add('show'); return; }
+  if (!found) {
+    document.getElementById('lerr').textContent = 'E-mail ou senha incorretos.';
+    document.getElementById('lerr').classList.add('show'); return;
+  }
+  if(found.status === 'desligado') {
+    document.getElementById('lerr').textContent = 'Usuário desativado. Contate o administrador.';
+    document.getElementById('lerr').classList.add('show'); return;
+  }
   window.ME = found; ME = found;
-  window._f360AppInitialized = true; // impede onAuthStateChanged de duplicar
+  window._f360AppInitialized = true;
+  saveLoginToQuickAccess(found); // salva para acesso rápido
   addLog('login', ME.nome + ' fez login');
   document.getElementById('lerr').classList.remove('show');
   document.getElementById('login-page').style.display = 'none';
@@ -3211,6 +3364,7 @@ const NAV_CONFIG = {
     {id:'presenca', label:'Presença', icon:'user-check'},
     {id:'horarios', label:'Horários', icon:'clock'},
     {id:'relatorios', label:'Relatórios', icon:'bar-chart'},
+    {id:'configuracoes', label:'Configurações', icon:'settings'},
   ],
   funcionario: [
     {id:'meu-ponto', label:'Meu Ponto', icon:'clock'},
@@ -3220,6 +3374,7 @@ const NAV_CONFIG = {
     {id:'radio', label:'Rádio PTT', icon:'radio'},
     {id:'presenca', label:'Histórico', icon:'user-check'},
     {id:'gps', label:'GPS', icon:'navigation'},
+    {id:'configuracoes', label:'Configurações', icon:'settings'},
   ],
 };
 
@@ -3283,7 +3438,7 @@ function goPage(id) {
     logs:'Log de Atividades', configuracoes:'Configurações',
     'minha-equipe':'Minha Equipe', 'meu-ponto':'Meu Ponto',
     chamados:'Chamados', checklist:'Checklist',
-    comunicacao:'Comunicação', radio:'Rádio PTT',
+    comunicacao:'Comunicação & Rádio', radio:'Comunicação & Rádio',
   };
   document.getElementById('page-title').textContent = titles[id] || id;
   setPage(id);
@@ -3315,7 +3470,7 @@ function setPage(id) {
     chamados: renderChamados,
     checklist: ()=>{ if(ME?.perfil==='admin') setCkTab('chamados'); else setCkTab('checklist'); },
     comunicacao: renderComunicacao,
-    radio: renderRadioFull,
+    radio: ()=>{ goPage('comunicacao'); setTimeout(()=>setComTab('canais'),50); },
   };
   renders[id]?.();
 }
@@ -5831,33 +5986,163 @@ function clearLogs() {
 
 // ─── CONFIG ───
 function renderConfig() {
-  const perms = [
-    {role:'Administrador', icon:'👑', color:'amber', perms:['Acesso total', 'Gerenciar usuários', 'Ver relatórios', 'Configurar espaços', 'Exportar dados']},
-    {role:'Gestor', icon:'👤', color:'blue', perms:['Gerenciar equipe', 'Aprovar registros', 'Ver presença', 'Ver relatórios da equipe']},
-    {role:'Operador', icon:'🔧', color:'green', perms:['Registrar ponto', 'Ver histórico próprio', 'Check-in/out QR']},
-  ];
-  document.getElementById('perms-list').innerHTML = perms.map(p=>`
-    <div style="margin-bottom:16px;padding:14px;background:var(--bg3);border-radius:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-size:18px">${p.icon}</span>
-        <span style="font-size:14px;font-weight:700;color:var(--text)">${p.role}</span>
-      </div>
-      ${p.perms.map(perm=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;font-size:12px;color:var(--text2)"><span style="color:var(--green)">✓</span>${perm}</div>`).join('')}
-    </div>`).join('');
+  const isAdmin  = ME?.perfil === 'admin';
+  const isGestor = ME?.perfil === 'gestor';
+  const [c1,c2]  = avc(ME?.nome||'?');
 
-  document.getElementById('sys-settings').innerHTML = [
-    {label:'Validação por GPS', on:true},
-    {label:'Check-in por QR Code', on:true},
-    {label:'Notificações push', on:false},
-    {label:'Relatório automático mensal', on:true},
-    {label:'Log de atividades', on:true},
-  ].map(s=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:13px;color:var(--text)">${s.label}</span>
-      <label class="switch" onclick="this.querySelector('.switch-track').classList.toggle('on')">
-        <div class="switch-track ${s.on?'on':''}"><div class="switch-thumb"></div></div>
-      </label>
-    </div>`).join('');
+  // ── Seção Meu Perfil (todos os usuários) ──
+  const permsEl = document.getElementById('perms-list');
+  if(permsEl) {
+    const perms = [
+      {role:'Administrador', icon:'👑', color:'amber', perms:['Acesso total', 'Gerenciar usuários', 'Ver relatórios', 'Configurar espaços', 'Exportar dados']},
+      {role:'Gestor', icon:'👤', color:'blue', perms:['Gerenciar equipe', 'Aprovar registros', 'Ver presença', 'Ver relatórios da equipe']},
+      {role:'Operador', icon:'🔧', color:'green', perms:['Registrar ponto', 'Ver histórico próprio', 'Check-in/out QR']},
+    ];
+    permsEl.innerHTML = `
+      <!-- Meu Perfil -->
+      <div style="background:var(--bg3);border-radius:14px;padding:18px;margin-bottom:20px;border:1px solid var(--border2)">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">👤 Meu perfil</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div class="av av-lg" style="background:linear-gradient(135deg,${c1},${c2})">${ini(ME?.nome||'?')}</div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">${ME?.nome||'—'}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">${ME?.email||'—'}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${ME?.cargo||ME?.perfil||'—'}</div>
+          </div>
+        </div>
+
+        <!-- Alterar Senha -->
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">🔒 Alterar senha</div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Senha atual</label>
+            <div style="position:relative">
+              <input type="password" id="cfg-senha-atual" placeholder="••••••••" style="width:100%;padding-right:42px">
+              <button type="button" onclick="togglePassVis('cfg-senha-atual',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)">👁</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Nova senha</label>
+            <div style="position:relative">
+              <input type="password" id="cfg-senha-nova" placeholder="Mínimo 8 caracteres" oninput="checkCfgSenha()" style="width:100%;padding-right:42px">
+              <button type="button" onclick="togglePassVis('cfg-senha-nova',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)">👁</button>
+            </div>
+            <div id="cfg-senha-strength" style="font-size:11px;margin-top:4px"></div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Confirmar nova senha</label>
+            <input type="password" id="cfg-senha-conf" placeholder="Repita a nova senha">
+          </div>
+          <button class="btn primary" onclick="salvarNovaSenha()" style="width:100%">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Salvar nova senha
+          </button>
+        </div>
+      </div>
+
+      <!-- Permissões por perfil (só admin vê) -->
+      ${isAdmin ? perms.map(p=>`
+        <div style="margin-bottom:12px;padding:14px;background:var(--bg3);border-radius:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:18px">${p.icon}</span>
+            <span style="font-size:14px;font-weight:700;color:var(--text)">${p.role}</span>
+          </div>
+          ${p.perms.map(perm=>'<div style="display:flex;align-items:center;gap:7px;padding:4px 0;font-size:12px;color:var(--text2)"><span style="color:var(--green)">✓</span>'+perm+'</div>').join('')}
+        </div>`).join('') : ''}
+    `;
+  }
+
+  const sysEl = document.getElementById('sys-settings');
+  if(sysEl) {
+    if(isAdmin) {
+      sysEl.innerHTML = [
+        {label:'Validação por GPS', on:true, id:'sys-gps'},
+        {label:'Check-in por QR Code', on:true, id:'sys-qr'},
+        {label:'Notificações push', on:false, id:'sys-notif'},
+        {label:'Relatório automático mensal', on:true, id:'sys-report'},
+        {label:'Log de atividades', on:true, id:'sys-log'},
+      ].map(s=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text)">${s.label}</span>
+          <label class="switch" onclick="this.querySelector('.switch-track').classList.toggle('on')">
+            <div class="switch-track ${s.on?'on':''}"><div class="switch-thumb"></div></div>
+          </label>
+        </div>`).join('') + renderDownloadApp();
+    } else {
+      sysEl.innerHTML = renderDownloadApp();
+    }
+  }
+}
+
+function checkCfgSenha() {
+  const val = document.getElementById('cfg-senha-nova')?.value || '';
+  const el  = document.getElementById('cfg-senha-strength');
+  if(!el) return;
+  if(!val) { el.textContent=''; return; }
+  const score = [val.length>=8, /[A-Z]/.test(val), /[a-z]/.test(val), /[0-9]/.test(val), /[^A-Za-z0-9]/.test(val)].filter(Boolean).length;
+  const cfg = score<=2?{c:'var(--red)',l:'Fraca'}:score<=3?{c:'var(--amber)',l:'Média'}:score<=4?{c:'var(--blue)',l:'Boa'}:{c:'var(--green)',l:'Forte ✓'};
+  el.innerHTML = `<div style="height:3px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:3px"><div style="height:100%;width:${score/5*100}%;background:${cfg.c};transition:width .3s"></div></div><span style="color:${cfg.c}">${cfg.l}</span>`;
+}
+
+function salvarNovaSenha() {
+  const atual  = document.getElementById('cfg-senha-atual')?.value;
+  const nova   = document.getElementById('cfg-senha-nova')?.value;
+  const conf   = document.getElementById('cfg-senha-conf')?.value;
+  if(!atual || !nova || !conf) { toast('Preencha todos os campos','red'); return; }
+  if(atual !== ME?.senha) { toast('Senha atual incorreta','red'); return; }
+  if(nova !== conf) { toast('As senhas não coincidem','red'); return; }
+  if(nova.length < 8) { toast('Senha deve ter mínimo 8 caracteres','red'); return; }
+  // Atualizar nos dados locais
+  const users = ld('f360_users',[]);
+  const idx = users.findIndex(u => u.id === ME.id || u.email === ME.email);
+  if(idx >= 0) {
+    users[idx].senha = nova;
+    sv('f360_users', users);
+    ME.senha = nova;
+    window.ME.senha = nova;
+    // Sync Firebase
+    if(window.F360Firebase) window.F360Firebase.set('users', ME.id, {senha: nova});
+    toast('✅ Senha alterada com sucesso!','green');
+    // Limpar campos
+    ['cfg-senha-atual','cfg-senha-nova','cfg-senha-conf'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('cfg-senha-strength').textContent='';
+  }
+}
+
+function renderDownloadApp() {
+  return `
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px">📱 Baixar o App</div>
+      <div style="background:var(--bluel);border:1px solid rgba(59,126,246,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--blue2)">
+        O F360 OPS pode ser instalado como app no seu celular sem precisar da App Store ou Play Store — é um PWA (Progressive Web App).
+      </div>
+      <!-- Android -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:8px;cursor:pointer" onclick="installAndroid()">
+        <div style="font-size:28px">🤖</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Android</div>
+          <div style="font-size:11px;color:var(--text3)">Abra no Chrome → menu ⋮ → "Adicionar à tela inicial"</div>
+        </div>
+        <button class="btn primary sm" onclick="event.stopPropagation();installAndroid()">Instalar</button>
+      </div>
+      <!-- iOS -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;cursor:pointer" onclick="installIOS()">
+        <div style="font-size:28px">🍎</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">iPhone / iPad</div>
+          <div style="font-size:11px;color:var(--text3)">Abra no Safari → botão compartilhar → "Adicionar à Tela de Início"</div>
+        </div>
+        <button class="btn ghost sm" onclick="event.stopPropagation();installIOS()">Ver passos</button>
+      </div>
+      <!-- Install button for desktop/Android Chrome -->
+      <div id="pwa-install-btn-wrap" style="display:none;margin-top:10px">
+        <button class="btn primary" id="pwa-install-btn" onclick="triggerPwaInstall()" style="width:100%">
+          ⬇️ Instalar F360 OPS agora
+        </button>
+      </div>
+    </div>`;
 }
 
 // ─── MY TEAM (gestor) ───
@@ -5885,6 +6170,65 @@ function renderMyTeam() {
     <div style="text-align:center;color:var(--text3);font-size:13px;padding:20px">✅ Nenhuma aprovação pendente</div>`;
 }
 
+
+
+// ── PWA Install helpers ──
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  const wrap = document.getElementById('pwa-install-btn-wrap');
+  if(wrap) wrap.style.display = 'block';
+});
+
+function triggerPwaInstall() {
+  if(_pwaPrompt) {
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(r => {
+      if(r.outcome === 'accepted') toast('✅ App instalado!','green');
+      _pwaPrompt = null;
+    });
+  } else {
+    toast('Use o menu do browser para instalar','blue');
+  }
+}
+
+function installAndroid() {
+  if(_pwaPrompt) { triggerPwaInstall(); return; }
+  showInstallModal('android');
+}
+
+function installIOS() {
+  showInstallModal('ios');
+}
+
+function showInstallModal(platform) {
+  const steps = platform === 'ios'
+    ? ['1️⃣ Abra o F360 OPS no <strong>Safari</strong> (não Chrome)', '2️⃣ Toque no botão de <strong>compartilhar</strong> ↑ na barra inferior', '3️⃣ Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>', '4️⃣ Toque em <strong>"Adicionar"</strong> no canto superior direito', '5️⃣ O ícone do app aparecerá na sua tela inicial ✅']
+    : ['1️⃣ Abra o F360 OPS no <strong>Chrome</strong>', '2️⃣ Toque no menu <strong>⋮</strong> (três pontos) no canto superior direito', '3️⃣ Toque em <strong>"Adicionar à tela inicial"</strong>', '4️⃣ Confirme tocando em <strong>"Adicionar"</strong>', '5️⃣ O ícone do app aparecerá na sua tela inicial ✅'];
+  
+  let modal = document.getElementById('modal-install-app');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-install-app';
+    modal.className = 'modal';
+    modal.style.maxWidth = '420px';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div class="modal-head">
+      <div class="modal-title">${platform==='ios'?'🍎 Instalar no iPhone':'🤖 Instalar no Android'}</div>
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      ${steps.map(s=>`<div style="background:var(--bg3);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.5">${s}</div>`).join('')}
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--text3)">
+      Após instalar, o F360 OPS abre como um app nativo, sem barra do browser.
+    </div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal()" style="width:100%">Entendido!</button></div>`;
+  openModal('modal-install-app');
+}
 
 // ─── NOTIFICATIONS ───
 function openNotifs() {
@@ -7097,26 +7441,405 @@ function storeMsgF(uid,msg){
   all[k]=all[k].slice(-200);sv('f360_msgs',all);
 }
 
-function renderComunicacao(){
-  const users=ld('f360_users',[]);
-  const others=users.filter(u=>u.id!==ME?.id);
-  const el=document.getElementById('contatos-full');if(!el)return;
-  el.innerHTML=others.map(u=>{
-    const[c1,c2]=avc(u.nome);
-    const msgs=getMsgsF(u.id);const last=msgs[msgs.length-1];
-    return`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s" onclick="openChatFull('${u.id}')" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
-      <div class="av av-md" style="background:linear-gradient(135deg,${c1},${c2})">${ini(u.nome)}</div>
+// ══════════════════════════════════════════════
+// COMUNICAÇÃO — Mensagens + Rádio PTT
+// ══════════════════════════════════════════════
+
+let _comActiveUserId = null;
+let _comUnsubChat    = null;
+let _comTab          = 'contatos';
+
+function setComTab(tab) {
+  _comTab = tab;
+  document.getElementById('com-panel-contatos').style.display = tab==='contatos' ? 'block' : 'none';
+  document.getElementById('com-panel-canais').style.display   = tab==='canais'   ? 'block' : 'none';
+  document.getElementById('com-tab-contatos').classList.toggle('on', tab==='contatos');
+  document.getElementById('com-tab-canais').classList.toggle('on',   tab==='canais');
+  if(tab==='contatos') renderContatosList();
+  if(tab==='canais')   renderRadioCanais();
+}
+
+function renderComunicacao() {
+  setComTab(_comTab || 'contatos');
+}
+
+function renderContatosList() {
+  const users  = ld('f360_users', []);
+  const q      = (document.getElementById('com-search')?.value || '').toLowerCase();
+  const others = users.filter(u => u.id !== ME?.id && (u.status||'ativo') !== 'desligado')
+    .filter(u => !q || u.nome.toLowerCase().includes(q) || (u.cargo||'').toLowerCase().includes(q));
+  const el = document.getElementById('contatos-full'); if(!el) return;
+  const presence = ld('f360_presence', []);
+  el.innerHTML = others.map(u => {
+    const [c1,c2] = avc(u.nome);
+    const msgs = getMsgsF(u.id);
+    const last = msgs[msgs.length-1];
+    const isOnline = presence.find(p => p.userId===u.id)?.online;
+    const isActive = _comActiveUserId === u.id;
+    return `<div onclick="comOpenChat('${u.id}')"
+      style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:background .15s;${isActive?'background:var(--bluel);':''}border-bottom:1px solid var(--border)"
+      onmouseenter="if('${u.id}'!==_comActiveUserId)this.style.background='var(--bg3)'"
+      onmouseleave="if('${u.id}'!==_comActiveUserId)this.style.background=''">
+      <div style="position:relative">
+        <div class="av av-md" style="background:linear-gradient(135deg,${c1},${c2})">${ini(u.nome)}</div>
+        <div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${isOnline?'var(--green)':'var(--text4)'};border:2px solid var(--bg2)"></div>
+      </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--text)">${u.nome}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last?(last.from==='me'?'Você: ':'')+last.msg:u.cargo||u.perfil}</div>
+        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last?(last.from==='me'?'Você: ':'')+last.msg:u.cargo||u.perfil||'—'}</div>
       </div>
-      <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
+    </div>`;
+  }).join('') || '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Nenhum usuário</div>';
+}
+
+function comOpenChat(uid) {
+  const users = ld('f360_users', []); 
+  const u = users.find(x => x.id === uid); if(!u) return;
+  _comActiveUserId = uid;
+  window.currentChatUser = u;
+  // Update list highlight
+  renderContatosList();
+  // Fill header
+  const [c1,c2] = avc(u.nome);
+  const avEl = document.getElementById('com-chat-av');
+  if(avEl) { avEl.textContent=ini(u.nome); avEl.style.background=`linear-gradient(135deg,${c1},${c2})`; }
+  const nomeEl = document.getElementById('com-chat-nome');
+  if(nomeEl) nomeEl.textContent = u.nome;
+  const presence = ld('f360_presence', []);
+  const isOnline = presence.find(p => p.userId===uid)?.online;
+  const stEl = document.getElementById('com-chat-status');
+  if(stEl) { stEl.textContent = isOnline?'● online':'○ offline'; stEl.style.color=isOnline?'var(--green)':'var(--text4)'; }
+  // Show chat panel
+  document.getElementById('com-chat-placeholder').style.display = 'none';
+  document.getElementById('com-chat-active').style.display = 'flex';
+  // Load messages
+  comRenderMsgs(uid);
+  // Real-time listener
+  if(_comUnsubChat) { try{_comUnsubChat();}catch{} }
+  if(window.F360Firebase && ME) {
+    const roomId = window.F360Firebase.roomId(ME.id, uid);
+    _comUnsubChat = window.F360Firebase.msgRoom(roomId, msgs => {
+      const me = window.ME;
+      const mapped = msgs.map(m=>({_id:m.id,from:m.fromId===me?.id?'me':'them',fromNome:m.fromNome||'',msg:m.msg||'',ts:m.tsStr||''}));
+      const k = [me?.id,uid].sort().join('|');
+      const all = JSON.parse(localStorage.getItem('f360_msgs')||'{}');
+      all[k] = mapped; localStorage.setItem('f360_msgs',JSON.stringify(all));
+      if(_comActiveUserId===uid) { comRenderMsgs(uid); renderContatosList(); }
+    });
+  }
+  // Clear input
+  const inp = document.getElementById('com-inp');
+  if(inp) { inp.value=''; inp.style.height='auto'; inp.focus(); }
+}
+
+function comRenderMsgs(uid) {
+  const el = document.getElementById('com-msgs'); if(!el) return;
+  const msgs = getMsgsF(uid);
+  if(!msgs.length) {
+    const u = ld('f360_users',[]).find(x=>x.id===uid);
+    el.innerHTML=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:6px"><div style="font-size:36px">💬</div><div style="font-size:13px">Inicie a conversa com ${u?.nome?.split(' ')[0]||'este usuário'}</div></div>`;
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const isMe = m.from === 'me';
+    return `<div style="display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};margin-bottom:2px">
+      ${!isMe?`<div style="font-size:10px;color:var(--text3);margin-bottom:2px;padding-left:4px">${m.fromNome||''}</div>`:''}
+      <div style="padding:10px 14px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMe?'var(--blue)':'var(--bg3)'};color:${isMe?'#fff':'var(--text)'};max-width:75%;font-size:14px;line-height:1.5;word-break:break-word">
+        ${m.msg}
+        <div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right;font-family:var(--font-mono)">${m.ts||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function comSendMsg() {
+  const inp = document.getElementById('com-inp');
+  const msg = inp?.value.trim();
+  if(!msg || !_comActiveUserId || !ME) return;
+  const me = window.ME;
+  const ts = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const newMsg = { _id:gid(), from:'me', fromNome:me.nome, msg, ts };
+  storeMsgF(_comActiveUserId, newMsg);
+  // Send to Firebase
+  if(window.F360Firebase) {
+    const roomId = window.F360Firebase.roomId(me.id, _comActiveUserId);
+    window.F360Firebase.sendMsg(roomId, { fromId:me.id, fromNome:me.nome, toId:_comActiveUserId, msg, tsStr:ts });
+  }
+  inp.value=''; inp.style.height='auto';
+  comRenderMsgs(_comActiveUserId);
+  renderContatosList();
+}
+
+function openChatFull(uid) {
+  // Se estiver na página de comunicação, abre inline
+  if(currentPage==='comunicacao') { setComTab('contatos'); setTimeout(()=>comOpenChat(uid),50); }
+  else { goPage('comunicacao'); setTimeout(()=>{ setComTab('contatos'); comOpenChat(uid); }, 200); }
+}
+
+// ══════════════════════════════════════════════
+// RÁDIO PTT — Canais por departamento + Firebase
+// ══════════════════════════════════════════════
+
+let _radioActiveChannel = 'geral';
+let _radioPttOn         = false;
+let _radioPttStream     = null;
+let _radioPttRec        = null;
+let _radioPttChunks     = [];
+let _radioPttSecs       = 0;
+let _radioPttInt        = null;
+let _radioUnsubs        = {};
+
+function getRadioChannels() {
+  const teams = ld('f360_teams', []);
+  // Canal geral sempre presente
+  const channels = [{
+    id: 'geral', nome: 'Canal Geral', icon: '📡', desc: 'Todos os membros',
+    cor: 'var(--blue)', corL: 'var(--bluel)', tipo: 'geral'
+  }];
+  // Um canal por departamento
+  teams.forEach(t => {
+    channels.push({
+      id: 'dept-'+t.id, nome: t.nome, icon: t.icon, desc: t.desc||t.nome,
+      cor: t.cor||'var(--purple)', corL: 'rgba(155,109,255,.12)', tipo: 'departamento', equipeId: t.id
+    });
+  });
+  return channels;
+}
+
+function canAccessChannel(ch) {
+  if(!ME) return false;
+  if(ME.perfil === 'admin') return true;
+  if(ch.tipo === 'geral') return true;
+  if(ch.tipo === 'departamento') {
+    if(ME.perfil === 'gestor') return ch.equipeId === ME.equipeId;
+    if(ME.perfil === 'funcionario') return ch.equipeId === ME.equipeId;
+  }
+  return false;
+}
+
+function renderRadioCanais() {
+  const channels = getRadioChannels().filter(ch => canAccessChannel(ch));
+  if(!_radioActiveChannel && channels.length) _radioActiveChannel = channels[0].id;
+  const listEl = document.getElementById('radio-canais-list'); if(!listEl) return;
+  listEl.innerHTML = channels.map(ch => {
+    const isActive = ch.id === _radioActiveChannel;
+    return `<div onclick="selectRadioChannel('${ch.id}')"
+      style="display:flex;align-items:center;gap:10px;background:${isActive?ch.corL:'var(--bg3)'};border:1.5px solid ${isActive?ch.cor:'var(--border)'};border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer;transition:all .2s">
+      <div style="width:38px;height:38px;border-radius:11px;background:${ch.corL};display:flex;align-items:center;justify-content:center;font-size:20px">${ch.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${ch.nome}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px">${ch.tipo==='geral'?'Todos os membros':ch.desc}</div>
+      </div>
+      ${isActive?`<div style="display:flex;align-items:flex-end;gap:2px;height:16px">
+        ${[0,1,2,3].map(i=>`<span style="width:3px;background:${ch.cor};border-radius:2px;animation:ptt-wave .8s ease-in-out ${i*.12}s infinite;display:inline-block"></span>`).join('')}
+      </div>`:''}
+    </div>`;
+  }).join('');
+  // Render active channel info
+  const active = channels.find(ch => ch.id === _radioActiveChannel) || channels[0];
+  if(active) updateRadioChannelUI(active);
+  // Subscribe to active channel transmissions
+  subscribeRadioChannel(_radioActiveChannel);
+}
+
+function selectRadioChannel(id) {
+  _radioActiveChannel = id;
+  renderRadioCanais();
+}
+
+function updateRadioChannelUI(ch) {
+  const g = id => document.getElementById(id);
+  if(g('rci-icon'))  { g('rci-icon').textContent  = ch.icon; g('rci-icon').style.background = ch.corL; }
+  if(g('rci-nome'))  g('rci-nome').textContent    = ch.nome;
+  if(g('rci-desc'))  g('rci-desc').textContent    = ch.tipo==='geral'?'Canal aberto — todos os membros':ch.desc;
+  if(g('ptt-main-lbl')) g('ptt-main-lbl').textContent = `Pressionar para falar — ${ch.nome}`;
+  // Members
+  const users = ld('f360_users',[]);
+  const members = ch.tipo==='geral'
+    ? users.filter(u => (u.status||'ativo')!=='desligado')
+    : users.filter(u => u.equipeId===ch.equipeId && (u.status||'ativo')!=='desligado');
+  if(g('rci-members')) {
+    g('rci-members').innerHTML = members.slice(0,8).map(u => {
+      const [c1,c2] = avc(u.nome);
+      return `<div title="${u.nome}" style="display:flex;align-items:center;gap:5px;background:var(--bg3);border-radius:20px;padding:4px 10px 4px 4px">
+        <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${ini(u.nome)}</div>
+        <span style="font-size:11px;font-weight:600;color:var(--text2)">${u.nome.split(' ')[0]}</span>
+      </div>`;
+    }).join('') + (members.length>8?`<span style="font-size:11px;color:var(--text3)">+${members.length-8}</span>`:'');
+  }
+}
+
+// ── Subscribe to channel transmissions via Firebase ──
+function subscribeRadioChannel(channelId) {
+  if(_radioUnsubs[channelId]) return; // already subscribed
+  if(!window.F360Firebase) return;
+  const F = window.F360Firebase;
+  // Listen to radio transmissions on this channel
+  try {
+    _radioUnsubs[channelId] = F.listen('radio_'+channelId, data => {
+      // Sort by timestamp
+      const sorted = [...data].sort((a,b) => (a.ts||0)-(b.ts||0));
+      const stored = JSON.parse(localStorage.getItem('f360_radio_'+channelId)||'[]');
+      // Merge new
+      sorted.forEach(t => {
+        if(!stored.find(s=>s.id===t.id)) stored.push(t);
+      });
+      localStorage.setItem('f360_radio_'+channelId, JSON.stringify(stored.slice(-50)));
+      // Update UI if on this channel
+      if(_radioActiveChannel===channelId) {
+        renderRadioTransmissionLog(channelId);
+        // Show "on air" if someone is transmitting (within last 30s)
+        const nowActive = sorted.find(t => t.transmitting && Date.now()-t.ts < 30000);
+        const onAirEl = document.getElementById('rci-on-air');
+        const onAirNomeEl = document.getElementById('rci-on-air-nome');
+        if(onAirEl) onAirEl.style.display = (nowActive && nowActive.fromId !== ME?.id) ? 'flex' : 'none';
+        if(onAirNomeEl && nowActive) onAirNomeEl.textContent = nowActive.fromNome + ' falando...';
+        // Play incoming audio if not the sender
+        if(nowActive && nowActive.fromId !== ME?.id && nowActive.audio) {
+          playRadioAudio(nowActive.audio);
+        }
+      }
+    });
+  } catch(e) { console.warn('Radio subscribe error:', e); }
+}
+
+// ── Play incoming PTT audio ──
+let _radioAudioCtx = null;
+function playRadioAudio(base64Audio) {
+  try {
+    const audio = new Audio(base64Audio);
+    audio.play().catch(()=>{});
+    showRadioVizActive('📻 Recebendo...');
+  } catch(e) {}
+}
+
+function showRadioVizActive(label) {
+  const idle = document.getElementById('radio-viz-idle');
+  const bars = document.getElementById('radio-viz-bars');
+  const lbl  = document.getElementById('radio-viz-label');
+  if(idle) idle.style.display = 'none';
+  if(bars) {
+    bars.style.display = 'flex';
+    bars.innerHTML = Array.from({length:20},(_,i)=>`<div style="flex:1;background:var(--green);border-radius:2px 2px 0 0;animation:radioBar ${0.3+Math.random()*0.5}s ease-in-out ${i*0.05}s infinite alternate;min-height:4px"></div>`).join('');
+  }
+  if(lbl) lbl.textContent = label||'';
+  setTimeout(()=>{ 
+    if(idle) idle.style.display='flex'; 
+    if(bars) bars.style.display='none'; 
+  }, 3000);
+}
+
+function renderRadioTransmissionLog(channelId) {
+  const el = document.getElementById('radio-transmissions-log'); if(!el) return;
+  const stored = JSON.parse(localStorage.getItem('f360_radio_'+channelId)||'[]').slice(-10).reverse();
+  if(!stored.length) { el.innerHTML='<div style="font-size:12px;color:var(--text4);text-align:center;padding:8px">Nenhuma transmissão ainda</div>'; return; }
+  el.innerHTML = stored.map(t=>{
+    const [c1,c2]=avc(t.fromNome||'?');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${ini(t.fromNome||'?')}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${t.fromNome||'—'}</div>
+        ${t.audio?`<audio controls src="${t.audio}" style="height:24px;width:100%;margin-top:3px"></audio>`:'<div style="font-size:10px;color:var(--text3)">Transmissão de voz</div>'}
+      </div>
+      <div style="font-size:10px;font-family:var(--font-mono);color:var(--text4);flex-shrink:0">${t.dur||''}<br>${t.tsStr||''}</div>
     </div>`;
   }).join('');
 }
 
-function openChatFull(uid){
-  abrirChatFullscreen(uid);
+// ── PTT Button handlers ──
+async function pttMainDown(e) {
+  e.preventDefault();
+  if(_radioPttOn) return;
+  _radioPttOn = true;
+  const btn = document.getElementById('ptt-main-btn');
+  if(btn) { btn.style.background='linear-gradient(135deg,#dc2626,#EF4444)'; btn.style.boxShadow='0 8px 28px rgba(239,68,68,.5)'; btn.querySelector('span').textContent='🔴 Transmitindo — solte para parar'; }
+  showRadioVizActive('🎙️ Transmitindo...');
+  // Vibrate feedback on mobile
+  if(navigator.vibrate) navigator.vibrate(100);
+  try {
+    _radioPttStream  = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, sampleRate:22050 } });
+    _radioPttChunks  = [];
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+    _radioPttRec     = new MediaRecorder(_radioPttStream, { mimeType, audioBitsPerSecond:32000 });
+    _radioPttRec.ondataavailable = ev => { if(ev.data.size>0) _radioPttChunks.push(ev.data); };
+    _radioPttRec.onstop = () => { sendRadioTransmission(); };
+    _radioPttRec.start();
+    _radioPttSecs = 0;
+    clearInterval(_radioPttInt);
+    _radioPttInt = setInterval(()=>{
+      _radioPttSecs++;
+      const el = document.getElementById('ptt-main-timer');
+      if(el) el.textContent = String(Math.floor(_radioPttSecs/60)).padStart(2,'0')+':'+String(_radioPttSecs%60).padStart(2,'0');
+      if(_radioPttSecs >= 60) pttMainUp(e); // max 60s
+    }, 1000);
+  } catch(err) {
+    _radioPttOn = false;
+    pttMainResetUI();
+    toast('Microfone: '+err.message, 'red');
+  }
+}
+
+function pttMainUp(e) {
+  if(!_radioPttOn) return;
+  _radioPttOn = false;
+  clearInterval(_radioPttInt);
+  if(_radioPttRec && _radioPttRec.state === 'recording') _radioPttRec.stop();
+  _radioPttStream?.getTracks().forEach(t=>t.stop());
+  _radioPttStream = null;
+  pttMainResetUI();
+  if(navigator.vibrate) navigator.vibrate([50,30,50]);
+}
+
+function pttMainResetUI() {
+  const btn = document.getElementById('ptt-main-btn');
+  if(btn) { btn.style.background='linear-gradient(135deg,#1a4fd8,#3B7EF6)'; btn.style.boxShadow='0 6px 20px rgba(59,126,246,.4)'; }
+  const lbl = document.getElementById('ptt-main-lbl');
+  const channels = getRadioChannels();
+  const active = channels.find(ch=>ch.id===_radioActiveChannel);
+  if(lbl) lbl.textContent = 'Pressionar para falar'+(active?' — '+active.nome:'');
+  const timerEl = document.getElementById('ptt-main-timer');
+  if(timerEl) timerEl.textContent = '00:00';
+}
+
+async function sendRadioTransmission() {
+  const dur = String(Math.floor(_radioPttSecs/60)).padStart(2,'0')+':'+String(_radioPttSecs%60).padStart(2,'0');
+  const blob = new Blob(_radioPttChunks, {type:'audio/webm'});
+  
+  // Convert to base64
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const audioData = e.target.result;
+    const transmission = {
+      id: gid(), channelId: _radioActiveChannel,
+      fromId: ME?.id, fromNome: ME?.nome||'Usuário',
+      audio: audioData, dur,
+      ts: Date.now(), tsStr: new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      transmitting: false
+    };
+    // Save locally
+    const stored = JSON.parse(localStorage.getItem('f360_radio_'+_radioActiveChannel)||'[]');
+    stored.push(transmission);
+    localStorage.setItem('f360_radio_'+_radioActiveChannel, JSON.stringify(stored.slice(-50)));
+    // Sync to Firebase (sem o audio grande — streaming via URL não disponível, usa base64 pequeno)
+    if(window.F360Firebase) {
+      try {
+        // Comprimir: só salvar se < 500KB
+        const size = audioData.length;
+        const toSave = size < 500000 ? {...transmission} : {...transmission, audio: null};
+        await window.F360Firebase.set('radio_'+_radioActiveChannel, transmission.id, toSave);
+      } catch(err) { console.warn('Radio sync error:', err); }
+    }
+    renderRadioTransmissionLog(_radioActiveChannel);
+    toast('✅ Transmitido — '+dur, 'green');
+  };
+  reader.readAsDataURL(blob);
+}
+
+function renderRadioFull() {
+  // Redirect to new comunicacao radio tab
+  goPage('comunicacao');
+  setTimeout(()=>setComTab('canais'), 50);
 }
 
 
@@ -7492,7 +8215,7 @@ function pttBigUp(e){
   else{pttBigStream?.getTracks().forEach(t=>t.stop());pttBigStream=null;}
 }
 const _pttStyle=document.createElement('style');
-_pttStyle.textContent='@keyframes ptt-wave{0%,100%{height:4px}50%{height:26px}}';
+_pttStyle.textContent='@keyframes ptt-wave{0%,100%{height:4px}50%{height:26px}} @keyframes radioBar{0%{height:4px}100%{height:36px}}';
 document.head.appendChild(_pttStyle);
 
 // ─── CHECKLIST+CHAMADOS COMBINED TAB ───
@@ -8085,24 +8808,22 @@ function renderPresence() {
 // ─── BOOT ───
 // Full reset of stale data — runs once per browser session
 (function resetStaleData(){
-  // If this session already initialized, skip
-  if(sessionStorage.getItem('f360_session_init')) return;
-  sessionStorage.setItem('f360_session_init','1');
-
-  // Force wipe chamados & checklists so seedChamadosExtra always re-seeds demo data
-  localStorage.removeItem('f360_chamados');
-  localStorage.removeItem('f360_chamados_seeded2');
-  localStorage.removeItem('f360_checklists');
-
-  // If f360_users exists but has no seed users with passwords, wipe it so seedData re-creates
-  const existingUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
-  const hasSeedAdmin = existingUsers.find(u => u.email==='bruna.vieira@fecaf.com.br' && u.senha);
-  if(!hasSeedAdmin) {
-    localStorage.removeItem('f360_users');
+  // Se já inicializou nesta sessão, apenas garantir admin está correto
+  const users = JSON.parse(localStorage.getItem('f360_users')||'[]');
+  const adminIdx = users.findIndex(u => u.email==='bruna.vieira@fecaf.com.br');
+  if(adminIdx >= 0) {
+    // Sempre garantir senha correta do admin
+    users[adminIdx].senha = '123456789Bc*';
+    users[adminIdx].perfil = 'admin';
+    users[adminIdx].ativo = true;
+    localStorage.setItem('f360_users', JSON.stringify(users));
+  } else {
+    // Admin não existe — limpar seed flag para re-criar
     localStorage.removeItem('f360_seeded');
-    console.log('[F360] Seed users missing — will re-seed');
+    console.log('[F360] Admin not found — will re-seed');
   }
-  console.log('[F360] Session initialized — seed data will be refreshed');
+  // Não apagar chamados/checklists — dados reais dos usuários
+  console.log('[F360] Session check complete');
 })();
 seedData();
 buildProfilePills();
@@ -9330,15 +10051,21 @@ function saveOperador() {
     users.push(userData);
   }
   sv('f360_users', users);
-  if(window.F360Firebase) window.F360Firebase.set('users', userData.id, { ...userData, senha:undefined });
+  // Sync to Firebase — atualiza em tempo real para todos os usuários conectados
+  if(window.F360Firebase) {
+    const fbData = {...userData};
+    // Não salvar senha no Firestore (segurança)
+    delete fbData.senha;
+    window.F360Firebase.set('users', userData.id, fbData);
+  }
   addLog('operador', (editId?'Editou':'Criou')+' operador "'+nome+'"');
-  // Verify save worked
   const saved = ld('f360_users',[]).find(u=>u.id===userData.id);
   if(!saved) { toast('Erro ao salvar — tente novamente','red'); return; }
   closeModal();
   renderEmployees();
+  // Atualizar dashboard se estiver na tela
+  if(currentPage==='dashboard') renderDashboard();
   toast(editId ? '✅ Operador atualizado!' : '✅ Operador "'+nome+'" criado!', 'green');
-  // If new, open schedule editor
   if(!editId) setTimeout(() => editarEscalaOperador(userData.id), 800);
 }
 
@@ -9376,6 +10103,7 @@ function excluirOperador(userId) {
     }
     addLog('operador', 'Excluiu operador "' + u.nome + '"');
     renderEmployees();
+    if(currentPage==='dashboard') renderDashboard();
     toast('Operador excluído — relatório salvo', 'green');
   });
 }
@@ -10346,6 +11074,10 @@ function startListeners() {
     if(p==='checklist') window.renderCkChamados?.();
     if(p==='dashboard') window.renderDashboard?.();
     window.renderChMetrics?.();
+    // Atualiza notif dot se houver chamados abertos
+    const abertos = data.filter(c=>c.status==='aberto').length;
+    const dot = document.getElementById('notif-dot');
+    if(dot) dot.style.display = abertos > 0 ? 'block' : 'none';
     // Notify new critical
     const crit = data.filter(c=>c.urgencia==='critico'&&c.status==='aberto');
     if(typeof window._F360_lastCrit !== 'undefined' && crit.length > window._F360_lastCrit) {
@@ -10376,40 +11108,45 @@ function startListeners() {
     if(window.currentPage==='meu-ponto') window.renderMyPoint?.();
   });
 
-  // Users — merge Firestore data but NEVER overwrite seed passwords/perfil
+  // Users — merge sem sobrescrever senhas/perfis locais + auto-refresh de telas
   _unsubs.users = F.listen('users', data => {
     const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
-    // Merge: keep local senha/perfil/equipeId if Firestore record lacks them
     const merged = data.map(fbU => {
       const local = localUsers.find(l => l.id===fbU.id || l.email?.toLowerCase()===fbU.email?.toLowerCase());
-      if(local) {
-        return {
-          ...fbU,
-          senha:    local.senha    || fbU.senha,
-          perfil:   local.perfil   || fbU.perfil   || 'funcionario',
-          equipeId: local.equipeId || fbU.equipeId || '',
-          cargo:    local.cargo    || fbU.cargo    || '',
-        };
-      }
+      if(local) return { ...fbU, senha:local.senha||fbU.senha, perfil:local.perfil||fbU.perfil||'funcionario', equipeId:local.equipeId||fbU.equipeId||'', cargo:local.cargo||fbU.cargo||'' };
       return fbU;
     });
-    // Also keep any local users not in Firestore yet (seed users with passwords)
     localUsers.forEach(lu => {
-      if(!merged.find(m => m.id===lu.id || m.email?.toLowerCase()===lu.email?.toLowerCase())) {
-        merged.push(lu);
-      }
+      if(!merged.find(m => m.id===lu.id || m.email?.toLowerCase()===lu.email?.toLowerCase())) merged.push(lu);
     });
     localStorage.setItem('f360_users', JSON.stringify(merged));
+    // Auto-refresh páginas que dependem de usuários
+    const p = window.currentPage;
+    if(p==='funcionarios') window.renderEmployees?.();
+    if(p==='equipes')      window.renderTeams?.();
+    if(p==='dashboard')    window.renderDashboard?.();
+    if(p==='minha-equipe') window.renderMyTeam?.();
+    if(p==='presenca')     window.renderPresence?.();
   });
 
-  // Presence dots
+  // Presence — update communication online indicators
   _unsubs.presence = F.listen('presence', data => {
+    localStorage.setItem('f360_presence', JSON.stringify(data));
     data.forEach(p => {
       document.querySelectorAll(`[data-presence="${p.userId}"]`).forEach(el => {
         el.style.background = p.online ? 'var(--green)' : 'var(--text4)';
       });
     });
+    // Auto-refresh communication list if open
+    if(window.currentPage==='comunicacao') window.renderContatosList?.();
   });
+  // Subscribe to all accessible radio channels
+  setTimeout(() => {
+    const channels = window.getRadioChannels?.() || [];
+    channels.filter(ch => window.canAccessChannel?.(ch)).forEach(ch => {
+      window.subscribeRadioChannel?.(ch.id);
+    });
+  }, 2000);
 
   console.log('[F360] Real-time listeners active ✅');
 }
@@ -10572,6 +11309,9 @@ window.openChatFull = function(uid) {
 };
 
 // Override sendMsgFull to use Firestore
+// ── Com page send override ──
+window._origComSendMsg = window.comSendMsg;
+
 window._origSendMsgFull = window.sendMsgFull;
 window.sendMsgFull = function() {
   const me = window.ME; const other = window.currentChatUser;
