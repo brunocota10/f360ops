@@ -3065,7 +3065,7 @@ function seedData() {
 }
 
 // ─── STATE ───
-let ME = null;
+window.ME = null; // ME é sempre window.ME para ser acessível pelo módulo Firebase
 let currentPage = 'dashboard';
 let sidebarCollapsed = false;
 
@@ -3107,7 +3107,7 @@ function doLogin() {
   const users = ld('f360_users', []);
   const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
   if (!found) { document.getElementById('lerr').classList.add('show'); return; }
-  ME = found;
+  window.ME = found; ME = found;
   window._f360AppInitialized = true; // impede onAuthStateChanged de duplicar
   addLog('login', ME.nome + ' fez login');
   document.getElementById('lerr').classList.remove('show');
@@ -3118,6 +3118,8 @@ function doLogin() {
 
 // ─── APP INIT ───
 function initApp() {
+  // Sincronizar ME local com window.ME (Firebase seta window.ME)
+  if(!ME && window.ME) ME = window.ME;
   if(!ME) { console.error('[F360] ME is null in initApp'); return; }
   // Garantir que seed data está carregada
   seedData();
@@ -3163,6 +3165,7 @@ function initApp() {
 }
 
 function updateUserUI() {
+  if(!ME && window.ME) ME = window.ME;
   if(!ME) return;
   const [c1,c2] = avc(ME.nome);
   const initials = ini(ME.nome);
@@ -3240,6 +3243,8 @@ const ICONS = {
 
 
 function buildSidebar() {
+  // Sincronizar ME local com window.ME
+  if(!ME && window.ME) ME = window.ME;
   if(!ME) return;
   // Garantir perfil sempre válido antes de renderizar
   if(!ME.perfil || !['admin','gestor','funcionario'].includes(ME.perfil)) {
@@ -5893,7 +5898,7 @@ function openUserMenu() {
 
 function doLogout() {
   addLog('logout', ME?.nome + ' fez logout');
-  ME = null;
+  window.ME = null; ME = null;
   window._f360AppInitialized = false; // permite nova inicialização
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-page').style.display = 'flex';
