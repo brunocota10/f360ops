@@ -3108,6 +3108,7 @@ function doLogin() {
   const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.senha === pass);
   if (!found) { document.getElementById('lerr').classList.add('show'); return; }
   ME = found;
+  window._f360AppInitialized = true; // impede onAuthStateChanged de duplicar
   addLog('login', ME.nome + ' fez login');
   document.getElementById('lerr').classList.remove('show');
   document.getElementById('login-page').style.display = 'none';
@@ -5893,6 +5894,7 @@ function openUserMenu() {
 function doLogout() {
   addLog('logout', ME?.nome + ' fez logout');
   ME = null;
+  window._f360AppInitialized = false; // permite nova inicialização
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-page').style.display = 'flex';
   buildProfilePills();
@@ -10458,8 +10460,8 @@ window.doLogin = async function() {
       const cleanP = {};
       Object.entries(profile).forEach(([k,v]) => { if(k !== 'senha' && v !== undefined) cleanP[k] = v; });
       await window.F360Firebase.set('users', fbUid, cleanP);
-      // Marca que já estamos inicializando para o onAuthStateChanged não duplicar
-      window._authRestoreRunning = true;
+      // Marca app como inicializado para o onAuthStateChanged não duplicar
+      window._f360AppInitialized = true;
       window.ME = profile;
       firebaseOk = true;
       errEl.classList.remove('show');
@@ -10479,7 +10481,7 @@ window.doLogin = async function() {
       window.initApp();
       setTimeout(() => {
         if(window.ME) { window.buildSidebar?.(); window.updateUserUI?.(); }
-        window._authRestoreRunning = false;
+        // app permanece inicializado
       }, 500);
       console.log('[F360] Firebase login OK:', profile.nome, '| perfil:', window.ME.perfil);
     } catch(err) {
@@ -10521,6 +10523,7 @@ window.doLogout = async function() {
   window._chatUnsubs?.forEach?.(fn=>{try{fn()}catch{}});
   window.addLog?.('logout', window.ME?.nome+' fez logout');
   window.ME = null;
+  window._f360AppInitialized = false; // permite nova inicialização
   try { await signOut(fbAuth); } catch(e){}
   document.getElementById('app').classList.remove('ready');
   document.getElementById('login-page').style.display='flex';
@@ -10721,10 +10724,13 @@ window._pushNotif = (title, body) => {
 };
 
 // ── Auto-session restore ─────────────────────────────
-let _authRestoreRunning = false;
+// Flag global para evitar dupla inicialização
+window._f360AppInitialized = false;
+
 onAuthStateChanged(fbAuth, async fbUser => {
-  if(fbUser && !window.ME && !_authRestoreRunning) {
-    _authRestoreRunning = true;
+  // Só executa se: tem usuário firebase, app ainda não inicializado, e não está rodando
+  if(fbUser && !window._f360AppInitialized) {
+    window._f360AppInitialized = true;
     console.log('[F360] Restoring session for', fbUser.email);
     let profile = await F.get('users', fbUser.uid);
 
@@ -10811,7 +10817,7 @@ onAuthStateChanged(fbAuth, async fbUser => {
       if(window.ME) { window.buildSidebar?.(); window.updateUserUI?.(); }
     }, 500);
     console.log('[F360] Session restored:', window.ME.nome, '| perfil:', window.ME.perfil);
-    _authRestoreRunning = false;
+    // Flag permanece true — app está inicializado
   }
 });
 
