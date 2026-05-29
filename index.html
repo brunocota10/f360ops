@@ -3070,16 +3070,18 @@ let currentPage = 'dashboard';
 let sidebarCollapsed = false;
 
 // ─── LOGIN ───
+// Seed credentials are always hardcoded so Firebase can't break the login pills
+const SEED_CREDENTIALS = [
+  {email:'bruna.vieira@fecaf.com.br',    senha:'Cachorro2026#', perfil:'admin',       nome:'Bruna Vieira'},
+  {email:'gabriel.marques@colegioser.com',senha:'Capivara2026#', perfil:'gestor',      nome:'Gabriel Marques'},
+  {email:'claudiano.meireles@colegioser.com',senha:'Cavalo2026#',perfil:'funcionario', nome:'Claudiano Meireles'},
+];
+
 function buildProfilePills() {
-  const users = ld('f360_users', []);
-  const profiles = [
-    users.find(u=>u.perfil==='admin'),
-    users.find(u=>u.perfil==='gestor'),
-    users.find(u=>u.perfil==='funcionario'),
-  ].filter(Boolean);
-  const icons = {admin:'👑', gestor:'👤', funcionario:'🔧'};
+  const icons  = {admin:'👑', gestor:'👤', funcionario:'🔧'};
   const labels = {admin:'Admin', gestor:'Gestor', funcionario:'Operador'};
-  document.getElementById('profile-pills').innerHTML = profiles.map(u=>`
+  // Always use hardcoded seeds for pills — Firebase can't break these
+  document.getElementById('profile-pills').innerHTML = SEED_CREDENTIALS.map(u=>`
     <div class="profile-pill" onclick="fillLogin('${u.email}','${u.senha}',this)">
       <div class="profile-pill-icon">${icons[u.perfil]}</div>
       <div class="profile-pill-name">${labels[u.perfil]}</div>
@@ -8057,10 +8059,18 @@ function renderPresence() {
   sessionStorage.setItem('f360_session_init','1');
 
   // Force wipe chamados & checklists so seedChamadosExtra always re-seeds demo data
-  // (real user-created data would persist via their own save actions after login)
   localStorage.removeItem('f360_chamados');
   localStorage.removeItem('f360_chamados_seeded2');
   localStorage.removeItem('f360_checklists');
+
+  // If f360_users exists but has no seed users with passwords, wipe it so seedData re-creates
+  const existingUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+  const hasSeedAdmin = existingUsers.find(u => u.email==='bruna.vieira@fecaf.com.br' && u.senha);
+  if(!hasSeedAdmin) {
+    localStorage.removeItem('f360_users');
+    localStorage.removeItem('f360_seeded');
+    console.log('[F360] Seed users missing — will re-seed');
+  }
   console.log('[F360] Session initialized — seed data will be refreshed');
 })();
 seedData();
@@ -10270,13 +10280,27 @@ async function seedFirestore() {
 async function bootstrap() {
   console.log('[F360] Loading Firestore data...');
   const map = {
-    users:'f360_users', teams:'f360_teams', spaces:'f360_spaces',
+    teams:'f360_teams', spaces:'f360_spaces',
     schedules:'f360_schedules', chamados:'f360_chamados',
     checklists:'f360_checklists', checkins:'f360_checkins', excecoes:'f360_excecoes'
   };
   for(const [coll, key] of Object.entries(map)) {
     const data = await F.getAll(coll);
     if(data.length) { localStorage.setItem(key, JSON.stringify(data)); }
+  }
+  // Users: merge Firestore with local seed (preserve passwords and perfil)
+  const fbUsers = await F.getAll('users');
+  if(fbUsers.length) {
+    const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+    const merged = fbUsers.map(fbU => {
+      const local = localUsers.find(l => l.id===fbU.id || l.email?.toLowerCase()===fbU.email?.toLowerCase());
+      if(local) return { ...fbU, senha:local.senha||fbU.senha, perfil:local.perfil||fbU.perfil||'funcionario', equipeId:local.equipeId||fbU.equipeId||'', cargo:local.cargo||fbU.cargo||'' };
+      return fbU;
+    });
+    localUsers.forEach(lu => {
+      if(!merged.find(m => m.id===lu.id || m.email?.toLowerCase()===lu.email?.toLowerCase())) merged.push(lu);
+    });
+    localStorage.setItem('f360_users', JSON.stringify(merged));
   }
   console.log('[F360] Data loaded ✅');
 }
@@ -10321,9 +10345,30 @@ function startListeners() {
     if(window.currentPage==='meu-ponto') window.renderMyPoint?.();
   });
 
-  // Users (para presença ao vivo)
+  // Users — merge Firestore data but NEVER overwrite seed passwords/perfil
   _unsubs.users = F.listen('users', data => {
-    localStorage.setItem('f360_users', JSON.stringify(data));
+    const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+    // Merge: keep local senha/perfil/equipeId if Firestore record lacks them
+    const merged = data.map(fbU => {
+      const local = localUsers.find(l => l.id===fbU.id || l.email?.toLowerCase()===fbU.email?.toLowerCase());
+      if(local) {
+        return {
+          ...fbU,
+          senha:    local.senha    || fbU.senha,
+          perfil:   local.perfil   || fbU.perfil   || 'funcionario',
+          equipeId: local.equipeId || fbU.equipeId || '',
+          cargo:    local.cargo    || fbU.cargo    || '',
+        };
+      }
+      return fbU;
+    });
+    // Also keep any local users not in Firestore yet (seed users with passwords)
+    localUsers.forEach(lu => {
+      if(!merged.find(m => m.id===lu.id || m.email?.toLowerCase()===lu.email?.toLowerCase())) {
+        merged.push(lu);
+      }
+    });
+    localStorage.setItem('f360_users', JSON.stringify(merged));
   });
 
   // Presence dots
@@ -10677,11 +10722,20 @@ onAuthStateChanged(fbAuth, async fbUser => {
 
     window.ME = profile;
 
-    // Also save to localStorage for offline access
+    // Ensure seed data is always present (users, teams, spaces etc.)
+    window.seedData?.();
+
+    // Also save to localStorage for offline access — preserve senha from seed
     const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
     const existIdx = localUsers.findIndex(u => u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase());
-    if(existIdx >= 0) localUsers[existIdx] = {...localUsers[existIdx], ...profile};
-    else localUsers.push(profile);
+    if(existIdx >= 0) {
+      // Keep existing senha if profile doesn't have one
+      const existingSenha = localUsers[existIdx].senha;
+      localUsers[existIdx] = {...localUsers[existIdx], ...profile};
+      if(!profile.senha && existingSenha) localUsers[existIdx].senha = existingSenha;
+    } else {
+      localUsers.push(profile);
+    }
     localStorage.setItem('f360_users', JSON.stringify(localUsers));
     localStorage.setItem('f360_me', JSON.stringify(profile));
 
