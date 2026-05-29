@@ -3113,16 +3113,16 @@ const fmtDate = d=>new Date(d).toLocaleDateString('pt-BR');
 // ─── INITIAL DATA SEED ───
 function seedData() {
   // Sempre garante que o admin existe com a senha correta
-  const existingUsers = ld('f360_users', []);
-  const adminIdx = existingUsers.findIndex(u => u.email === 'bruna.vieira@fecaf.com.br');
-  if(adminIdx >= 0) {
-    existingUsers[adminIdx].senha  = '123456789Bc*';
-    existingUsers[adminIdx].perfil = 'admin';
-    existingUsers[adminIdx].ativo  = true;
-    existingUsers[adminIdx].status = 'ativo';
-    sv('f360_users', existingUsers);
+  let _allUsers = ld('f360_users', []);
+  const _adminIdx = _allUsers.findIndex(u => u.email === 'bruna.vieira@fecaf.com.br');
+  if(_adminIdx >= 0) {
+    _allUsers[_adminIdx].senha  = '123456789Bc*';
+    _allUsers[_adminIdx].perfil = 'admin';
+    _allUsers[_adminIdx].ativo  = true;
+    _allUsers[_adminIdx].status = 'ativo';
+    sv('f360_users', _allUsers);
   }
-  if (ld('f360_seeded', false) && existingUsers.length > 0) {
+  if (ld('f360_seeded', false) && _allUsers.length > 0) {
     return;
   }
 
@@ -3135,10 +3135,9 @@ function seedData() {
   ];
 
   // Apenas o admin é criado automaticamente — outros usuários são cadastrados pelo admin
-  const existingUsers = ld('f360_users', []);
-  const adminExists = existingUsers.find(u => u.email === 'bruna.vieira@fecaf.com.br');
+  const adminExists = _allUsers.find(u => u.email === 'bruna.vieira@fecaf.com.br');
   const users = adminExists
-    ? existingUsers.map(u => u.email === 'bruna.vieira@fecaf.com.br'
+    ? _allUsers.map(u => u.email === 'bruna.vieira@fecaf.com.br'
         ? {...u, senha:'123456789Bc*', perfil:'admin', status:'ativo', ativo:true}
         : u)
     : [{id:'u1', nome:'Bruna Vieira', email:'bruna.vieira@fecaf.com.br', senha:'123456789Bc*', perfil:'admin', cargo:'Administradora', equipeId:'t5', ativo:true, status:'ativo', criadoEm:new Date().toISOString()}];
@@ -3238,7 +3237,16 @@ function fillLogin(email, pass, el) {
 
 function togglePw() {
   const inp = document.getElementById('l-pass');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if(!inp) return;
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  // Update eye icon
+  const eye = document.getElementById('l-eye');
+  if(eye) {
+    eye.innerHTML = isPass
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
 }
 
 function doLogin() {
@@ -9846,8 +9854,9 @@ function calcPeriodoDias() {
 
 function togglePassVis(inputId, btn) {
   const el = document.getElementById(inputId); if(!el) return;
-  el.type = el.type === 'password' ? 'text' : 'password';
-  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+  const isPass = el.type === 'password';
+  el.type = isPass ? 'text' : 'password';
+  if(btn) btn.textContent = isPass ? '🙈' : '👁';
 }
 
 // ── Render employees list ──
@@ -11227,35 +11236,46 @@ window.doLogin = async function() {
       }, 500);
       console.log('[F360] Firebase login OK:', profile.nome, '| perfil:', window.ME.perfil);
     } catch(err) {
-      console.warn('[F360] Firebase login failed:', err.code, err.message);
+      // Firebase auth falhou (usuário não cadastrado no Firebase Auth ou credencial errada)
+      // NÃO mostrar erro — vai tentar login local no Step 2
+      console.warn('[F360] Firebase auth failed (will try local):', err.code);
       firebaseOk = false;
     }
   }
 
-  // ── STEP 2: Fallback to local users (always works offline) ──
+  // ── STEP 2: Local login (sempre funciona — Firebase é bônus) ──
   if(!firebaseOk) {
+    // Re-seed para garantir admin atualizado
+    window.seedData?.();
     const users = JSON.parse(localStorage.getItem('f360_users') || '[]');
     const found = users.find(u =>
       u.email?.toLowerCase() === email.toLowerCase() && u.senha === pass
     );
 
     if(found) {
+      if(found.status === 'desligado') {
+        errEl.textContent = 'Usuário desativado. Contate o administrador.';
+        errEl.classList.add('show');
+        if(btn) { btn.textContent = 'Entrar no sistema'; btn.disabled = false; }
+        return;
+      }
+      window._f360AppInitialized = true;
       window.ME = found;
       errEl.classList.remove('show');
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('app').classList.add('ready');
+      window.saveLoginToQuickAccess?.(found);
       window.initApp();
-      console.log('[F360] Local login OK:', found.nome, '(Firebase offline/not configured)');
-      // Show soft warning (not blocking)
-      setTimeout(() => window.toast?.('⚠️ Modo offline — Firebase não configurado', 'amber'), 1000);
+      console.log('[F360] Local login OK:', found.nome, '| perfil:', found.perfil);
     } else {
-      // Wrong credentials
       errEl.textContent = 'E-mail ou senha incorretos.';
       errEl.classList.add('show');
     }
   }
 
   if(btn) { btn.textContent = 'Entrar no sistema'; btn.disabled = false; }
+  // Clear error if login succeeded
+  if(firebaseOk || window.ME) errEl.classList.remove('show');
 };
 
 // ── Override doLogout ────────────────────────────────
