@@ -3117,6 +3117,14 @@ function doLogin() {
 
 // ─── APP INIT ───
 function initApp() {
+  if(!ME) { console.error('[F360] ME is null in initApp'); return; }
+  // Garantir perfil válido antes de qualquer coisa
+  if(!ME.perfil || !['admin','gestor','funcionario'].includes(ME.perfil)) {
+    const allUsers = ld('f360_users',[]);
+    const match = allUsers.find(u => u.email && ME.email && u.email.toLowerCase()===ME.email.toLowerCase() && u.perfil);
+    ME.perfil = match?.perfil || 'funcionario';
+    console.warn('[F360] perfil corrigido para:', ME.perfil);
+  }
   buildSidebar();
   updateUserUI();
   seedChamadosExtra();
@@ -3224,8 +3232,16 @@ const ICONS = {
 
 function buildSidebar() {
   if(!ME) return;
+  // Garantir perfil sempre válido antes de renderizar
+  if(!ME.perfil || !['admin','gestor','funcionario'].includes(ME.perfil)) {
+    const allUsers = ld('f360_users',[]);
+    const match = allUsers.find(u => u.email && ME.email && u.email.toLowerCase()===ME.email.toLowerCase() && u.perfil);
+    ME.perfil = match?.perfil || 'funcionario';
+  }
   const items = NAV_CONFIG[ME.perfil] || NAV_CONFIG.funcionario;
-  document.getElementById('sb-nav').innerHTML = items.map(item=>`
+  const nav = document.getElementById('sb-nav');
+  if(!nav) return;
+  nav.innerHTML = items.map(item=>`
     <div class="sb-item" id="sbi-${item.id}" onclick="goPage('${item.id}')">
       <div class="sb-icon"><svg viewBox="0 0 24 24">${ICONS[item.icon]||''}</svg></div>
       <span class="sb-lbl">${item.label}</span>
@@ -10444,7 +10460,14 @@ window.doLogin = async function() {
       window._f360SetPresence?.(true);
       window.addEventListener('beforeunload', () => window._f360SetPresence?.(false));
       await window._f360SeedFirestore?.();
+      // Re-ensure perfil after bootstrap
+      const fbAfterUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+      const fbAfterMatch = fbAfterUsers.find(u => u.email?.toLowerCase()===profile.email?.toLowerCase() && u.perfil);
+      if(fbAfterMatch && fbAfterMatch.perfil) {
+        window.ME = {...window.ME, perfil:fbAfterMatch.perfil, equipeId:fbAfterMatch.equipeId||window.ME.equipeId||'', cargo:fbAfterMatch.cargo||window.ME.cargo||'', senha:fbAfterMatch.senha||window.ME.senha };
+      }
       window.initApp();
+      setTimeout(() => { window.buildSidebar?.(); window.updateUserUI?.(); }, 300);
       console.log('[F360] Firebase login OK:', profile.nome);
     } catch(err) {
       console.warn('[F360] Firebase login failed:', err.code, err.message);
@@ -10746,8 +10769,19 @@ onAuthStateChanged(fbAuth, async fbUser => {
     setPresence(true);
     window.addEventListener('beforeunload',()=>setPresence(false));
     await seedFirestore();
+    // Re-ensure perfil after bootstrap (bootstrap pode ter sobrescrito dados)
+    const afterBootstrapUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+    const afterMatch = afterBootstrapUsers.find(u => u.email?.toLowerCase()===profile.email?.toLowerCase() && u.perfil);
+    if(afterMatch && afterMatch.perfil) {
+      window.ME.perfil   = afterMatch.perfil;
+      window.ME.equipeId = afterMatch.equipeId || window.ME.equipeId || '';
+      window.ME.cargo    = afterMatch.cargo    || window.ME.cargo    || '';
+      window.ME.senha    = afterMatch.senha    || window.ME.senha;
+    }
     window.initApp();
-    console.log('[F360] Session restored:', profile.nome, '| perfil:', profile.perfil);
+    // Re-render sidebar after a tick to catch any async data
+    setTimeout(() => { window.buildSidebar?.(); window.updateUserUI?.(); }, 300);
+    console.log('[F360] Session restored:', window.ME.nome, '| perfil:', window.ME.perfil);
   }
 });
 
