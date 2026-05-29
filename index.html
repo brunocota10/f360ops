@@ -3118,22 +3118,30 @@ function doLogin() {
 // ─── APP INIT ───
 function initApp() {
   if(!ME) { console.error('[F360] ME is null in initApp'); return; }
-  // Garantir perfil válido antes de qualquer coisa
+  // Garantir que seed data está carregada
+  seedData();
+  // Garantir perfil válido — busca na lista local se necessário
   if(!ME.perfil || !['admin','gestor','funcionario'].includes(ME.perfil)) {
     const allUsers = ld('f360_users',[]);
     const match = allUsers.find(u => u.email && ME.email && u.email.toLowerCase()===ME.email.toLowerCase() && u.perfil);
     ME.perfil = match?.perfil || 'funcionario';
     console.warn('[F360] perfil corrigido para:', ME.perfil);
   }
+  // Garantir equipeId e outros campos
+  if(!ME.equipeId) {
+    const allUsers = ld('f360_users',[]);
+    const match = allUsers.find(u => u.email && ME.email && u.email.toLowerCase()===ME.email.toLowerCase());
+    if(match) { ME.equipeId = match.equipeId || ''; ME.cargo = match.cargo || ME.cargo || ''; }
+  }
+  console.log('[F360] initApp — perfil:', ME.perfil, '| nome:', ME.nome);
   buildSidebar();
   updateUserUI();
   seedChamadosExtra();
-  // Hide KPI tab from operadores globally
+  // Hide KPI tab from operadores
   setTimeout(()=>{
     const kpiTab = document.getElementById('cktab-kpi');
     if(kpiTab) kpiTab.style.display = (ME?.perfil==='admin'||ME?.perfil==='gestor') ? '' : 'none';
   }, 200);
-  if(!ME || !ME.perfil) { console.error('[F360] ME is null in initApp'); return; }
   const firstPage = ME.perfil === 'funcionario' ? 'meu-ponto' : 'dashboard';
   if(ME.perfil==='funcionario') startMpTimer();
   // Handle QR code opened via URL (redirect after login)
@@ -10333,7 +10341,7 @@ function startListeners() {
     window.renderChMetrics?.();
     // Notify new critical
     const crit = data.filter(c=>c.urgencia==='critico'&&c.status==='aberto');
-    if(crit.length > (_F360_lastCrit||0) && _F360_lastCrit !== undefined) {
+    if(typeof window._F360_lastCrit !== 'undefined' && crit.length > window._F360_lastCrit) {
       window._pushNotif?.('🔴 Chamado Crítico', crit[0]?.titulo||'Novo chamado crítico');
     }
     window._F360_lastCrit = crit.length;
@@ -10450,6 +10458,8 @@ window.doLogin = async function() {
       const cleanP = {};
       Object.entries(profile).forEach(([k,v]) => { if(k !== 'senha' && v !== undefined) cleanP[k] = v; });
       await window.F360Firebase.set('users', fbUid, cleanP);
+      // Marca que já estamos inicializando para o onAuthStateChanged não duplicar
+      window._authRestoreRunning = true;
       window.ME = profile;
       firebaseOk = true;
       errEl.classList.remove('show');
@@ -10460,15 +10470,18 @@ window.doLogin = async function() {
       window._f360SetPresence?.(true);
       window.addEventListener('beforeunload', () => window._f360SetPresence?.(false));
       await window._f360SeedFirestore?.();
-      // Re-ensure perfil after bootstrap
+      // Re-ensure perfil após bootstrap (que pode ter sobrescrito dados)
       const fbAfterUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
       const fbAfterMatch = fbAfterUsers.find(u => u.email?.toLowerCase()===profile.email?.toLowerCase() && u.perfil);
-      if(fbAfterMatch && fbAfterMatch.perfil) {
+      if(fbAfterMatch?.perfil) {
         window.ME = {...window.ME, perfil:fbAfterMatch.perfil, equipeId:fbAfterMatch.equipeId||window.ME.equipeId||'', cargo:fbAfterMatch.cargo||window.ME.cargo||'', senha:fbAfterMatch.senha||window.ME.senha };
       }
       window.initApp();
-      setTimeout(() => { window.buildSidebar?.(); window.updateUserUI?.(); }, 300);
-      console.log('[F360] Firebase login OK:', profile.nome);
+      setTimeout(() => {
+        if(window.ME) { window.buildSidebar?.(); window.updateUserUI?.(); }
+        window._authRestoreRunning = false;
+      }, 500);
+      console.log('[F360] Firebase login OK:', profile.nome, '| perfil:', window.ME.perfil);
     } catch(err) {
       console.warn('[F360] Firebase login failed:', err.code, err.message);
       firebaseOk = false;
@@ -10708,8 +10721,10 @@ window._pushNotif = (title, body) => {
 };
 
 // ── Auto-session restore ─────────────────────────────
+let _authRestoreRunning = false;
 onAuthStateChanged(fbAuth, async fbUser => {
-  if(fbUser && !window.ME) {
+  if(fbUser && !window.ME && !_authRestoreRunning) {
+    _authRestoreRunning = true;
     console.log('[F360] Restoring session for', fbUser.email);
     let profile = await F.get('users', fbUser.uid);
 
@@ -10743,10 +10758,22 @@ onAuthStateChanged(fbAuth, async fbUser => {
     Object.entries(profile).forEach(([k,v]) => { if(k !== 'senha' && v !== undefined) toSave[k] = v; });
     await F.set('users', fbUser.uid, toSave);
 
-    window.ME = profile;
-
-    // Ensure seed data is always present (users, teams, spaces etc.)
+    // Garantir que seedData está carregada ANTES de usar ME
     window.seedData?.();
+
+    // Buscar perfil correto dos seeds locais (têm perfil/equipeId corretos)
+    const seedUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
+    const seedMatch = seedUsers.find(u => u.email?.toLowerCase()===fbUser.email?.toLowerCase() && u.perfil);
+    if(seedMatch?.perfil) {
+      profile.perfil   = seedMatch.perfil;
+      profile.equipeId = seedMatch.equipeId || profile.equipeId || '';
+      profile.cargo    = seedMatch.cargo    || profile.cargo    || '';
+      profile.senha    = seedMatch.senha    || profile.senha;
+      profile.nome     = seedMatch.nome     || profile.nome;
+    }
+    if(!['admin','gestor','funcionario'].includes(profile.perfil)) profile.perfil = 'funcionario';
+
+    window.ME = profile;
 
     // Also save to localStorage for offline access — preserve senha from seed
     const localUsers = JSON.parse(localStorage.getItem('f360_users')||'[]');
@@ -10779,9 +10806,12 @@ onAuthStateChanged(fbAuth, async fbUser => {
       window.ME.senha    = afterMatch.senha    || window.ME.senha;
     }
     window.initApp();
-    // Re-render sidebar after a tick to catch any async data
-    setTimeout(() => { window.buildSidebar?.(); window.updateUserUI?.(); }, 300);
+    // Re-render sidebar garantido após dados async
+    setTimeout(() => {
+      if(window.ME) { window.buildSidebar?.(); window.updateUserUI?.(); }
+    }, 500);
     console.log('[F360] Session restored:', window.ME.nome, '| perfil:', window.ME.perfil);
+    _authRestoreRunning = false;
   }
 });
 
